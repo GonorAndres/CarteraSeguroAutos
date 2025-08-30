@@ -1,0 +1,18 @@
+{
+  "fecha_generacion": "2025-08-29",
+  "parametros": {
+    "n_policies": 52000,
+    "lambda_freq": 0.08,
+    "avg_severity": 24000,
+    "target_loss_ratio": 0.75,
+    "missing_rate": 0.06
+  },
+  "kpis": {
+    "loss_ratio": 0.809,
+    "frecuencia": 0.0883,
+    "severidad": 32119.9035,
+    "n_polizas": 52000,
+    "n_siniestros": 2300,
+    "target_achieved": true
+  }
+}
