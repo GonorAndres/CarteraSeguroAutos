@@ -11,12 +11,12 @@ library(lubridate)
 library(DBI)
 library(RMySQL)
 
-set.seed(1971)
+set.seed(1976)
 
 # Parámetros calibrados con mercado mexicano
 params_mercado <- list(
   n_policies = 52000,
-  lambda_freq = 0.08,          # 8% siniestralidad real CONDUSEF
+  lambda_freq = 0.085,          # 8% siniestralidad real CONDUSEF
   avg_severity = 24000,        # $24k promedio real AMIS
   target_loss_ratio = 0.75,    # 75% objetivo sectorial
   missing_rate = 0.06
@@ -48,14 +48,21 @@ estados_mexico <- data.frame(
 )
 
 vehiculos_catalogo <- data.frame(
-  marca = c("Nissan", "Volkswagen", "Chevrolet", "Toyota", "Ford", "Honda", 
-            "Hyundai", "Mazda", "Kia", "Seat", "Suzuki", "Renault"),
-  tipo = c("Sedan", "Sedan", "SUV", "Sedan", "SUV", "Sedan", 
-           "Sedan", "SUV", "SUV", "Sedan", "Hatchback", "Sedan"),
-  valor_promedio = c(280000, 320000, 350000, 300000, 380000, 290000,
-                     250000, 330000, 270000, 310000, 240000, 260000),
-  participacion_mercado = c(0.18, 0.15, 0.12, 0.10, 0.08, 0.07,
-                            0.06, 0.05, 0.05, 0.04, 0.05, 0.05)
+  marca = c("Nissan", "Nissan", "Nissan", "Volkswagen", "Volkswagen", "Volkswagen", 
+            "Chevrolet", "Chevrolet", "Toyota", "Toyota", "Ford", "Ford", 
+            "Honda", "Honda", "Hyundai", "Mazda", "Kia", "Seat"),
+  modelo = c("Versa", "March", "Sentra", "Jetta", "Vento", "Polo", 
+             "Aveo", "Equinox", "Corolla", "Yaris", "Fiesta", "EcoSport",
+             "Civic", "City", "Accent", "Mazda3", "Rio", "Ibiza"),
+  tipo = c("Sedan", "Hatchback", "Sedan", "Sedan", "Sedan", "Hatchback",
+           "Sedan", "SUV", "Sedan", "Hatchback", "Hatchback", "SUV",
+           "Sedan", "Sedan", "Sedan", "Sedan", "Sedan", "Hatchback"),
+  valor_mediano = c(360000, 288000, 405000, 468000, 378000, 315000,
+                    306000, 612000, 432000, 315000, 288000, 522000,
+                    468000, 342000, 324000, 414000, 306000, 351000),
+  participacion_mercado = c(0.08, 0.06, 0.04, 0.10, 0.05, 0.03,
+                            0.06, 0.06, 0.08, 0.04, 0.04, 0.04,
+                            0.05, 0.03, 0.04, 0.05, 0.04, 0.04)
 )
 
 # Función demografía (ya funciona)
@@ -77,7 +84,6 @@ generar_conductores <- function(n) {
   )
 }
 
-# Función vehículos y ubicación (corregida)
 generar_vehiculos_ubicacion <- function(n) {
   # Estados según concentración
   estados_sel <- sample(estados_mexico$estado, n, 
@@ -99,17 +105,43 @@ generar_vehiculos_ubicacion <- function(n) {
   años <- año_actual - rpois(n, lambda = 8)
   años <- pmax(años, año_actual - 20)
   
-  data.frame(
+  # Crear data.frame base
+  df <- data.frame(
     estado = estados_sel,
     codigo_postal = cps,
     marca_vehiculo = vehiculos_catalogo$marca[vehiculos_idx],
+    modelo_vehiculo = vehiculos_catalogo$modelo[vehiculos_idx],
     tipo_vehiculo = vehiculos_catalogo$tipo[vehiculos_idx],
     año_vehiculo = años,
-    valor_comercial = vehiculos_catalogo$valor_promedio[vehiculos_idx] * 
-      exp(-0.12 * (año_actual - años)),
+    valor_base = vehiculos_catalogo$valor_mediano[vehiculos_idx],
     canal_venta = sample(c("Agente", "Directo", "Banco", "Digital"), n,
                          prob = c(0.45, 0.25, 0.20, 0.10), replace = TRUE)
   )
+  
+  # Aplicar depreciación usando mutate
+  df %>%
+    mutate(
+      antiguedad = año_actual - años,  # Calcular antigüedad primero
+      valor_comercial = valor_base * case_when(
+        antiguedad == 0 ~ 1.0,
+        antiguedad == 1 ~ case_when(
+          marca_vehiculo %in% c("Toyota", "Honda") ~ 0.85,
+          marca_vehiculo %in% c("Volkswagen", "Nissan") ~ 0.82,
+          TRUE ~ 0.78
+        ),
+        antiguedad <= 5 ~ case_when(
+          marca_vehiculo %in% c("Toyota", "Honda") ~ 0.85 * (0.92)^(antiguedad-1),
+          marca_vehiculo %in% c("Volkswagen", "Nissan") ~ 0.82 * (0.90)^(antiguedad-1),
+          TRUE ~ 0.78 * (0.88)^(antiguedad-1)
+        ),
+        TRUE ~ case_when(
+          marca_vehiculo %in% c("Toyota", "Honda") ~ 0.85 * (0.92)^4 * (0.96)^(antiguedad-5),
+          marca_vehiculo %in% c("Volkswagen", "Nissan") ~ 0.82 * (0.90)^4 * (0.95)^(antiguedad-5),
+          TRUE ~ 0.78 * (0.88)^4 * (0.94)^(antiguedad-5)
+        )
+      )
+    ) %>%
+    select(-valor_base, -antiguedad)
 }
 
 # Test
@@ -138,11 +170,11 @@ generar_fechas_exposicion <- function(n) {
 # Función cálculo prima
 calcular_prima <- function(freq_esperada, sev_esperada, suma_aseg) {
   prima_pura <- freq_esperada * sev_esperada
-  recargos <- 0.35
+  recargos <- 0.4
   prima_comercial <- prima_pura * (1 + recargos)
   
   # Ajuste por suma asegurada
-  factor_suma <- log(suma_aseg / 250000) * 0.1 + 1
+  factor_suma <- log(suma_aseg / 160000) * 0.1 + 1 # tomando como base la media de la suma asegurada
   prima_comercial * factor_suma
 }
 
@@ -154,7 +186,7 @@ generar_dataset_polizas <- function(n_policies) {
     bind_cols(generar_vehiculos_ubicacion(n_policies)) %>%
     bind_cols(generar_fechas_exposicion(n_policies)) %>%
     mutate(
-      suma_asegurada = round(valor_comercial * runif(n_policies, 0.8, 1.2)),
+      suma_asegurada = round(valor_comercial * runif(n_policies, 0.7, 1.1)),
       
       # Factores de riesgo para tarificación
       factor_edad = case_when(
@@ -166,14 +198,14 @@ generar_dataset_polizas <- function(n_policies) {
       
       factor_vehiculo = case_when(
         tipo_vehiculo == "SUV" ~ 1.15,
-        tipo_vehiculo == "Sedan" ~ 1.0,
+        tipo_vehiculo == "Sedan" ~ 1.05,
         TRUE ~ 1.0
       ),
       
       factor_zona = case_when(
         estado %in% c("Ciudad de México", "Estado de México") ~ 1.3,
         estado %in% c("Jalisco", "Nuevo León") ~ 1.1,
-        TRUE ~ 1.0
+        TRUE ~ .95
       ),
       
       # Frecuencia y severidad esperadas
@@ -181,11 +213,11 @@ generar_dataset_polizas <- function(n_policies) {
         factor_vehiculo * factor_zona * exposicion,
       
       sev_esperada = params_mercado$avg_severity * 
-        (1 + (suma_asegurada - 250000) / 1000000) *
+        (1 + (suma_asegurada - 160000) / 1000000) *
         case_when(
-          tipo_vehiculo == "SUV" ~ 1.25,
-          tipo_vehiculo == "Sedan" ~ 1.0,
-          TRUE ~ 0.95
+          tipo_vehiculo == "SUV" ~ 1.15,
+          tipo_vehiculo == "Sedan" ~ 1.05,
+          TRUE ~ 1.0
         ),
       
       # Prima técnica
@@ -227,21 +259,21 @@ generar_siniestros <- function(polizas_df) {
                                   tipo_siniestro = sample(c("Colisión", "Robo Total", "Robo Parcial", 
                                                             "Daños", "Incendio"), 
                                                           n_siniestros, 
-                                                          prob = c(0.75, 0.05, 0.05, 0.10, 0.05), 
+                                                          prob = c(0.65, 0.04, 0.1, 0.2, 0.01), 
                                                           replace = TRUE)
                                 ) %>%
                                   mutate(
                                     # Severidad con distribución Gamma ajustada
                                     monto_base = rgamma(n_siniestros, 
-                                                        shape = 2.0, 
-                                                        scale = 9000),
+                                                        shape = 2, 
+                                                        scale = 8000),
                                     
                                     # Ajuste por tipo de siniestro
                                     monto_siniestro = case_when(
                                       tipo_siniestro == "Robo Total" ~ poliza_info$suma_asegurada * 
                                         runif(n_siniestros, 0.85, 1.0),
                                       tipo_siniestro == "Colisión" ~ monto_base * 
-                                        runif(n_siniestros, 0.7, 1.5),
+                                        runif(n_siniestros, 0.7, 1.6),
                                       tipo_siniestro == "Incendio" ~ poliza_info$suma_asegurada * 
                                         runif(n_siniestros, 0.70, 0.95),
                                       TRUE ~ monto_base
@@ -255,17 +287,6 @@ generar_siniestros <- function(polizas_df) {
                                                               prob = c(0.85, 0.12, 0.03), 
                                                               replace = TRUE),
                                     
-                                    # Deducibles y pagos
-                                    deducible = case_when(
-                                      tipo_siniestro == "Robo Total" ~ 0,
-                                      TRUE ~ pmax(monto_siniestro * 0.1, 1500)
-                                    ),
-                                    
-                                    monto_pagado = case_when(
-                                      estado_siniestro == "Pagado" ~ pmax(0, monto_siniestro - deducible),
-                                      TRUE ~ 0
-                                    ),
-                                    
                                     # Estacionalidad
                                     mes_siniestro = month(fecha_siniestro),
                                     factor_estacional = case_when(
@@ -277,6 +298,13 @@ generar_siniestros <- function(polizas_df) {
                                   mutate(
                                     monto_siniestro = monto_siniestro * 
                                       rnorm(n_siniestros, factor_estacional, 0.1),
+                                    
+                                    # Deducibles y pagos (dentro del mutate)
+                                    deducible = case_when(
+                                      tipo_siniestro == "Robo Total" ~ monto_siniestro * 0.15,
+                                      TRUE ~ pmax(monto_siniestro * 0.15, 1800)  # deducible de 15%
+                                    ),
+                                    
                                     monto_pagado = case_when(
                                       estado_siniestro == "Pagado" ~ pmax(0, monto_siniestro - deducible),
                                       TRUE ~ 0
@@ -297,20 +325,20 @@ generar_siniestros <- function(polizas_df) {
 dataset_polizas <- dataset_polizas %>%
   mutate(
     factor_edad = case_when(
-      edad_conductor < 25 ~ 1.4,
-      edad_conductor < 35 ~ 1.1, 
+      edad_conductor < 25 ~ 1.25,
+      edad_conductor < 35 ~ 1.05, 
       edad_conductor < 50 ~ 1.0,
       TRUE ~ 1.2
     ),
     factor_vehiculo = case_when(
-      tipo_vehiculo == "SUV" ~ 1.15,
-      tipo_vehiculo == "Sedan" ~ 1.0,
-      TRUE ~ 0.95
+      tipo_vehiculo == "SUV" ~ 1.10,
+      tipo_vehiculo == "Sedan" ~ 1.02,
+      TRUE ~ 1.0
     ),
     factor_zona = case_when(
       estado %in% c("Ciudad de México", "Estado de México") ~ 1.3,
       estado %in% c("Jalisco", "Nuevo León") ~ 1.1,
-      TRUE ~ 0.9
+      TRUE ~ 0.90
     ),
     freq_esperada = params_mercado$lambda_freq * factor_edad * 
       factor_vehiculo * factor_zona * exposicion
@@ -332,12 +360,13 @@ introducir_missing <- function(polizas_df) {
 
 # Validar KPIs
 validar_kpis <- function(polizas_df, siniestros_df) {
-  loss_ratio <- sum(siniestros_df$monto_pagado, na.rm = TRUE) / 
-    sum(polizas_df$prima_neta, na.rm = TRUE)
+  prima_devengada <- polizas_df$prima_neta * polizas_df$exposicion
+  loss_ratio <- sum(siniestros_df$monto_pagado) / sum(prima_devengada)
   
   freq_promedio <- nrow(siniestros_df) / sum(polizas_df$exposicion, na.rm = TRUE)
   
-  sev_promedio <- mean(siniestros_df$monto_siniestro, na.rm = TRUE)
+  sev_promedio <- mean(siniestros_df$monto_siniestro[siniestros_df$estado_siniestro == "Pagado"], 
+                       na.rm = TRUE)
   
   list(
     loss_ratio = loss_ratio,
