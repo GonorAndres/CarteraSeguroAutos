@@ -9,7 +9,6 @@
 library(tidyverse)
 library(lubridate)
 library(DBI)
-library(RMySQL)
 
 set.seed(1976)
 
@@ -20,15 +19,6 @@ params_mercado <- list(
   avg_severity = 24000,        # $24k promedio real AMIS
   target_loss_ratio = 0.75,    # 75% objetivo sectorial
   missing_rate = 0.06
-)
-
-# Configuración MySQL
-db_config <- list(
-  host = "localhost",
-  port = 3306,
-  user = " root",
-  password = "Andres77",               # Tu password aquí
-  dbname = "siniestralidad_db"
 )
 
 print("Configuración cargada")
