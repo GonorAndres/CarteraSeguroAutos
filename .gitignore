@@ -7,3 +7,5 @@ renv/local/
 renv/staging/
 *.html
 *_files/
+# Exception: include executive report
+!InformeEjecutivo.html
