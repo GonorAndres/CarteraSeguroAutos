@@ -24,6 +24,7 @@ CarteraSeguroAutos/
 │   └── GeoRiskAnalysis.R          # Análisis geográfico y segmentación
 ├── app.R                          # Dashboard Shiny interactivo
 ├── InformeEjecutivo.Rmd           # Reporte ejecutivo en RMarkdown
+├── InformeEjecutivo.html          # Reporte ejecutivo generado (listo para ver)
 ├── .Rprofile                      # Activación automática de renv
 ├── renv.lock                      # Archivo de dependencias renv
 ├── SETUP.md                       # Instrucciones de configuración renv
@@ -108,17 +109,22 @@ El dashboard abrirá automáticamente en tu navegador web con 8 pestañas de an�
 - Segmentación de Riesgo
 - Exploración de Datos
 
-6. Generar informe ejecutivo (opcional):
-```r
-# Generar reporte profesional en HTML
-rmarkdown::render("InformeEjecutivo.Rmd")
-```
+6. Ver informe ejecutivo:
 
-El informe se genera como archivo HTML profesional con:
+**Opción A: Ver el informe ya generado (recomendado)**
+
+Abre el archivo `InformeEjecutivo.html` en tu navegador web. Este informe profesional ya está incluido en el repositorio y contiene:
 - Análisis narrativo completo sin código técnico visible
 - Gráficos y tablas embebidos automáticamente
 - Formato profesional listo para compartir con audiencias no técnicas
 - Conclusiones y recomendaciones estratégicas
+
+**Opción B: Regenerar el informe (opcional)**
+
+Si modificaste los datos o análisis, puedes regenerar el informe:
+```r
+rmarkdown::render("InformeEjecutivo.Rmd")
+```
 
 ## Diccionario de Datos
 
