@@ -29,7 +29,16 @@ CarteraSeguroAutos/
 - R >= 4.0
 - RStudio (recomendado)
 
-### Paquetes Requeridos
+### Configuración de Entorno
+
+**Este proyecto usa `renv` para gestión reproducible de dependencias.**
+
+Para configuración completa del entorno, ver [SETUP.md](SETUP.md) que incluye:
+- Instalación de renv
+- Comando renv::restore() para instalar dependencias
+- Uso diario y mejores prácticas
+
+### Paquetes Requeridos (instalación manual alternativa)
 
 ```r
 install.packages(c(
