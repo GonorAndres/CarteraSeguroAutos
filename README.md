@@ -18,7 +18,15 @@ CarteraSeguroAutos/
 │       ├── polizas_sinteticas.csv     # 52,000 pólizas
 │       ├── siniestros_sinteticos.csv  # 2,332 siniestros
 │       └── resumen_generacion.json    # Metadata y KPIs
-├── LICENSE                         # Licencia MIT
+├── analysis/
+│   ├── EDA.R                      # Análisis exploratorio de datos
+│   ├── TrendAnalysis.R            # Análisis de tendencias temporales
+│   └── GeoRiskAnalysis.R          # Análisis geográfico y segmentación
+├── app.R                          # Dashboard Shiny interactivo
+├── .Rprofile                      # Activación automática de renv
+├── renv.lock                      # Archivo de dependencias renv
+├── SETUP.md                       # Instrucciones de configuración renv
+├── LICENSE                        # Licencia MIT
 └── README.md
 ```
 
@@ -64,12 +72,40 @@ cd CarteraSeguroAutos
 
 3. Ejecutar scripts en orden:
 ```r
-# Generar nuevos datos sintéticos
+# Generar nuevos datos sintéticos (opcional - ya existen datos)
 source("data/GeneracionDatos.R")
 
-# Cargar datos a SQLite
+# Cargar datos a SQLite (opcional - base de datos ya existe)
 source("data/CargaDatos.R")
 ```
+
+4. Ejecutar análisis exploratorio:
+```r
+# Análisis exploratorio con KPIs principales
+source("analysis/EDA.R")
+
+# Análisis de tendencias temporales
+source("analysis/TrendAnalysis.R")
+
+# Análisis geográfico y segmentación
+source("analysis/GeoRiskAnalysis.R")
+```
+
+5. Lanzar dashboard interactivo:
+```r
+# Dashboard Shiny interactivo
+shiny::runApp("app.R")
+```
+
+El dashboard abrirá automáticamente en tu navegador web con 8 pestañas de análisis:
+- Resumen Ejecutivo con KPIs principales
+- Análisis de Loss Ratio por segmentos
+- Análisis de Frecuencia
+- Análisis de Severidad
+- Análisis Temporal
+- Análisis Geográfico
+- Segmentación de Riesgo
+- Exploración de Datos
 
 ## Diccionario de Datos
 
@@ -161,15 +197,25 @@ Resultados de la generación actual (2025-09-02):
 - Missing data realista (~6%)
 - Sin duplicados en IDs
 
-## Próximos Pasos
+## Estado del Proyecto
 
-Este proyecto está en fase de fundación. Próximos desarrollos planeados:
+**Completado:**
+- Generación de datos sintéticos calibrados con mercado mexicano
+- Base de datos SQLite con pólizas y siniestros
+- Scripts de análisis exploratorio (EDA, tendencias, segmentación)
+- Dashboard interactivo Shiny con 8 pestañas de análisis
+- Sistema de gestión de dependencias con renv
+- Documentación completa
 
-1. Dashboard interactivo con Shiny
-2. Análisis exploratorio de datos (EDA)
-3. Modelado predictivo de frecuencia/severidad
-4. Análisis de segmentación de riesgo
-5. Reportes automatizados
+**Posibles Mejoras Futuras:**
+1. Modelado predictivo de frecuencia/severidad con GLM
+2. Reportes automatizados en PDF/HTML con RMarkdown
+3. Integración con bases de datos externas
+4. Funcionalidades de filtrado dinámico en dashboard
+5. Exportación de gráficos y tablas desde dashboard
+6. Análisis de series temporales con predicciones
+7. Tests unitarios con testthat
+8. Despliegue del dashboard en Shiny Server o shinyapps.io
 
 ## Autor
 
