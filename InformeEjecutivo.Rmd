@@ -1,0 +1,647 @@
+---
+title: "Análisis de Siniestralidad en Seguros de Autos"
+subtitle: "Cartera de Seguros Automotrices - Mercado Mexicano"
+author: "Andrés González Ortega"
+date: "`r format(Sys.Date(), '%d de %B, %Y')`"
+output:
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  fig.align = "center"
+)
+
+# Cargar librerías
+library(tidyverse)
+library(DBI)
+library(RSQLite)
+library(lubridate)
+library(scales)
+library(knitr)
+library(kableExtra)
+
+# Tema para gráficos
+theme_set(theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    plot.subtitle = element_text(color = "gray40"),
+    axis.title = element_text(face = "bold"),
+    legend.position = "bottom"
+  ))
+
+# Paleta de colores profesional
+colores <- c("#2E86AB", "#A23B72", "#F18F01", "#C73E1D", "#6A994E")
+```
+
+```{r cargar_datos, include=FALSE}
+# Conectar a base de datos
+con <- dbConnect(SQLite(), "data/siniestralidad.db")
+polizas <- dbGetQuery(con, "SELECT * FROM polizas") %>%
+  mutate(across(starts_with("fecha"), as.Date))
+siniestros <- dbGetQuery(con, "SELECT * FROM siniestros") %>%
+  mutate(across(starts_with("fecha"), as.Date))
+dbDisconnect(con)
+
+# Calcular KPIs principales
+kpis <- list(
+  n_polizas = nrow(polizas),
+  n_siniestros = nrow(siniestros),
+  prima_total = sum(polizas$prima_neta),
+  siniestros_total = sum(siniestros$monto_pagado),
+  loss_ratio = sum(siniestros$monto_pagado) / sum(polizas$prima_neta),
+  frecuencia = nrow(siniestros) / nrow(polizas),
+  severidad = mean(siniestros$monto_siniestro)
+)
+```
+
+---
+
+# Resumen Ejecutivo {.tabset}
+
+## Introducción
+
+Este informe presenta un análisis exhaustivo de una cartera de **`r format(kpis$n_polizas, big.mark = ",")`** pólizas de seguros automotrices en el mercado mexicano, con un enfoque particular en la **siniestralidad** y los factores que impactan la rentabilidad del negocio.
+
+El análisis se basa en datos sintéticos calibrados con parámetros reales del mercado mexicano (CONDUSEF y AMIS), cubriendo el período completo de vigencia de las pólizas y registrando **`r format(kpis$n_siniestros, big.mark = ",")`** eventos de siniestro.
+
+### Objetivos del Análisis
+
+1. Evaluar la rentabilidad de la cartera a través del **Loss Ratio**
+2. Identificar segmentos de alto y bajo riesgo
+3. Analizar patrones temporales y geográficos de siniestralidad
+4. Proporcionar recomendaciones estratégicas para optimización de la cartera
+
+## Indicadores Clave
+
+```{r kpis_tabla}
+kpis_df <- data.frame(
+  Indicador = c(
+    "Total de Pólizas",
+    "Total de Siniestros",
+    "Prima Total Colectada",
+    "Monto Total Pagado en Siniestros",
+    "Loss Ratio",
+    "Frecuencia de Siniestros",
+    "Severidad Promedio"
+  ),
+  Valor = c(
+    format(kpis$n_polizas, big.mark = ","),
+    format(kpis$n_siniestros, big.mark = ","),
+    paste0("$", format(round(kpis$prima_total / 1e6, 1), big.mark = ","), " millones MXN"),
+    paste0("$", format(round(kpis$siniestros_total / 1e6, 1), big.mark = ","), " millones MXN"),
+    paste0(round(kpis$loss_ratio * 100, 2), "%"),
+    paste0(round(kpis$frecuencia * 100, 2), "%"),
+    paste0("$", format(round(kpis$severidad), big.mark = ","), " MXN")
+  ),
+  Interpretación = c(
+    "Tamaño de la cartera asegurada",
+    "Eventos de siniestro registrados",
+    "Ingresos por primas de seguros",
+    "Egresos por pagos de siniestros",
+    ifelse(kpis$loss_ratio < 0.75, "✓ Dentro del objetivo (75%)", "⚠ Por encima del objetivo"),
+    "Porcentaje de pólizas con siniestros",
+    "Costo promedio por siniestro"
+  )
+)
+
+kable(kpis_df, align = c("l", "r", "l")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = TRUE) %>%
+  row_spec(5, bold = TRUE, background = ifelse(kpis$loss_ratio < 0.75, "#d4edda", "#fff3cd"))
+```
+
+### Hallazgo Principal
+
+El **Loss Ratio** de la cartera es de **`r sprintf("%.2f%%", kpis$loss_ratio * 100)`**, lo que indica que por cada peso colectado en primas, se pagan **`r sprintf("%.2f", kpis$loss_ratio)`** pesos en siniestros.
+
+```{r, results='asis'}
+if (kpis$loss_ratio <= 0.75) {
+  cat("**✓ Resultado:** La cartera está dentro del objetivo sectorial de 75%, indicando una operación rentable y sostenible.\n")
+} else {
+  cat("**⚠ Resultado:** La cartera está por encima del objetivo sectorial de 75%, requiriendo atención para mejorar la rentabilidad.\n")
+}
+```
+
+---
+
+# Análisis de Loss Ratio
+
+El **Loss Ratio** (Ratio de Siniestralidad) es el indicador más importante de rentabilidad en seguros. Representa la proporción entre los siniestros pagados y las primas colectadas.
+
+## Loss Ratio por Canal de Venta
+
+```{r lr_canal}
+lr_canal <- polizas %>%
+  group_by(canal_venta) %>%
+  summarise(prima_total = sum(prima_neta), .groups = "drop") %>%
+  left_join(
+    siniestros %>%
+      left_join(polizas %>% select(poliza_id, canal_venta), by = "poliza_id") %>%
+      group_by(canal_venta) %>%
+      summarise(siniestros_total = sum(monto_pagado), .groups = "drop"),
+    by = "canal_venta"
+  ) %>%
+  mutate(
+    siniestros_total = replace_na(siniestros_total, 0),
+    loss_ratio = siniestros_total / prima_total
+  ) %>%
+  arrange(desc(loss_ratio))
+
+ggplot(lr_canal, aes(x = reorder(canal_venta, loss_ratio), y = loss_ratio, fill = canal_venta)) +
+  geom_col(show.legend = FALSE) +
+  geom_hline(yintercept = kpis$loss_ratio, linetype = "dashed", color = "red", linewidth = 1) +
+  geom_text(aes(label = sprintf("%.1f%%", loss_ratio * 100)), hjust = -0.2, size = 4) +
+  scale_y_continuous(labels = percent_format(), limits = c(0, max(lr_canal$loss_ratio) * 1.1)) +
+  scale_fill_manual(values = colores) +
+  coord_flip() +
+  labs(
+    title = "Loss Ratio por Canal de Venta",
+    subtitle = "La línea roja representa el Loss Ratio global de la cartera",
+    x = NULL,
+    y = "Loss Ratio"
+  )
+```
+
+### Interpretación
+
+El análisis por canal de venta revela diferencias significativas en rentabilidad:
+
+- **Canal con mejor desempeño:** `r lr_canal$canal_venta[nrow(lr_canal)]` con `r sprintf("%.2f%%", lr_canal$loss_ratio[nrow(lr_canal)] * 100)`
+- **Canal con peor desempeño:** `r lr_canal$canal_venta[1]` con `r sprintf("%.2f%%", lr_canal$loss_ratio[1] * 100)`
+
+**Recomendación:** Fortalecer estrategias comerciales en los canales más rentables y revisar la selección de riesgos en canales con mayor siniestralidad.
+
+## Loss Ratio por Tipo de Vehículo
+
+```{r lr_vehiculo}
+lr_veh <- polizas %>%
+  group_by(tipo_vehiculo) %>%
+  summarise(
+    n_polizas = n(),
+    prima_total = sum(prima_neta),
+    .groups = "drop"
+  ) %>%
+  left_join(
+    siniestros %>%
+      left_join(polizas %>% select(poliza_id, tipo_vehiculo), by = "poliza_id") %>%
+      group_by(tipo_vehiculo) %>%
+      summarise(
+        n_siniestros = n(),
+        siniestros_total = sum(monto_pagado),
+        .groups = "drop"
+      ),
+    by = "tipo_vehiculo"
+  ) %>%
+  mutate(
+    n_siniestros = replace_na(n_siniestros, 0),
+    siniestros_total = replace_na(siniestros_total, 0),
+    loss_ratio = siniestros_total / prima_total,
+    frecuencia = n_siniestros / n_polizas
+  ) %>%
+  arrange(desc(loss_ratio))
+
+ggplot(lr_veh, aes(x = reorder(tipo_vehiculo, loss_ratio), y = loss_ratio, fill = tipo_vehiculo)) +
+  geom_col(show.legend = FALSE) +
+  geom_hline(yintercept = kpis$loss_ratio, linetype = "dashed", color = "red", linewidth = 1) +
+  geom_text(aes(label = sprintf("%.1f%%", loss_ratio * 100)), hjust = -0.2, size = 4) +
+  scale_y_continuous(labels = percent_format(), limits = c(0, max(lr_veh$loss_ratio) * 1.1)) +
+  scale_fill_manual(values = colores) +
+  coord_flip() +
+  labs(
+    title = "Loss Ratio por Tipo de Vehículo",
+    subtitle = "Comparación de rentabilidad según el tipo de vehículo asegurado",
+    x = NULL,
+    y = "Loss Ratio"
+  )
+```
+
+### Análisis por Segmento Vehicular
+
+```{r tabla_vehiculo}
+tabla_veh <- lr_veh %>%
+  select(tipo_vehiculo, n_polizas, loss_ratio, frecuencia) %>%
+  mutate(
+    loss_ratio = sprintf("%.2f%%", loss_ratio * 100),
+    frecuencia = sprintf("%.2f%%", frecuencia * 100)
+  )
+
+kable(tabla_veh,
+      col.names = c("Tipo de Vehículo", "Pólizas", "Loss Ratio", "Frecuencia"),
+      align = c("l", "r", "r", "r")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+Los vehículos tipo **`r lr_veh$tipo_vehiculo[1]`** presentan el Loss Ratio más alto, lo que sugiere mayor riesgo en este segmento.
+
+---
+
+# Análisis de Frecuencia
+
+La **frecuencia** mide el porcentaje de pólizas que generan al menos un siniestro. Una frecuencia global de **`r sprintf("%.2f%%", kpis$frecuencia * 100)`** significa que aproximadamente `r round(kpis$frecuencia * 100)` de cada 100 pólizas tuvieron un siniestro.
+
+## Frecuencia por Rango de Edad del Conductor
+
+```{r freq_edad}
+polizas_edad <- polizas %>%
+  mutate(rango_edad = cut(edad_conductor,
+                          breaks = c(0, 25, 35, 45, 55, 100),
+                          labels = c("18-25", "26-35", "36-45", "46-55", "56+")))
+
+freq_edad <- polizas_edad %>%
+  group_by(rango_edad) %>%
+  summarise(n_polizas = n(), .groups = "drop") %>%
+  left_join(
+    siniestros %>%
+      left_join(polizas_edad %>% select(poliza_id, rango_edad), by = "poliza_id") %>%
+      group_by(rango_edad) %>%
+      summarise(n_siniestros = n(), .groups = "drop"),
+    by = "rango_edad"
+  ) %>%
+  mutate(
+    n_siniestros = replace_na(n_siniestros, 0),
+    frecuencia = n_siniestros / n_polizas
+  ) %>%
+  arrange(desc(frecuencia))
+
+ggplot(freq_edad, aes(x = rango_edad, y = frecuencia, fill = rango_edad)) +
+  geom_col(show.legend = FALSE) +
+  geom_hline(yintercept = kpis$frecuencia, linetype = "dashed", color = "red", linewidth = 1) +
+  geom_text(aes(label = sprintf("%.1f%%", frecuencia * 100)), vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = percent_format(), limits = c(0, max(freq_edad$frecuencia) * 1.15)) +
+  scale_fill_manual(values = colores) +
+  labs(
+    title = "Frecuencia de Siniestros por Edad del Conductor",
+    subtitle = "Porcentaje de pólizas con al menos un siniestro",
+    x = "Rango de Edad",
+    y = "Frecuencia"
+  )
+```
+
+### Insights por Edad
+
+El rango de edad **`r freq_edad$rango_edad[1]`** muestra la frecuencia más alta (`r sprintf("%.2f%%", freq_edad$frecuencia[1] * 100)`), mientras que el rango **`r freq_edad$rango_edad[nrow(freq_edad)]`** presenta la frecuencia más baja (`r sprintf("%.2f%%", freq_edad$frecuencia[nrow(freq_edad)] * 100)`).
+
+**Implicación:** Los conductores más jóvenes tienden a tener mayor frecuencia de siniestros, lo que justifica primas más altas en estos segmentos.
+
+---
+
+# Análisis de Severidad
+
+La **severidad** representa el costo promedio de cada siniestro. La cartera tiene una severidad promedio de **$`r format(round(kpis$severidad), big.mark = ",")`** MXN por siniestro.
+
+## Severidad por Tipo de Siniestro
+
+```{r sev_tipo}
+sev_tipo <- siniestros %>%
+  group_by(tipo_siniestro) %>%
+  summarise(
+    n_siniestros = n(),
+    severidad_promedio = mean(monto_siniestro),
+    porcentaje = n() / nrow(siniestros),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(severidad_promedio))
+
+ggplot(sev_tipo, aes(x = reorder(tipo_siniestro, severidad_promedio),
+                     y = severidad_promedio, fill = tipo_siniestro)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = paste0("$", format(round(severidad_promedio), big.mark = ","))),
+            hjust = -0.1, size = 4) +
+  scale_y_continuous(labels = dollar_format(prefix = "$", big.mark = ","),
+                     limits = c(0, max(sev_tipo$severidad_promedio) * 1.15)) +
+  scale_fill_manual(values = colores) +
+  coord_flip() +
+  labs(
+    title = "Severidad Promedio por Tipo de Siniestro",
+    subtitle = "Costo promedio en pesos mexicanos",
+    x = NULL,
+    y = "Severidad Promedio (MXN)"
+  )
+```
+
+## Distribución de Tipos de Siniestro
+
+```{r dist_tipo}
+ggplot(sev_tipo, aes(x = "", y = porcentaje, fill = tipo_siniestro)) +
+  geom_col(width = 1, color = "white", linewidth = 1) +
+  coord_polar("y", start = 0) +
+  scale_fill_manual(values = colores) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Distribución de Siniestros por Tipo",
+    fill = "Tipo de Siniestro"
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5)
+  ) +
+  geom_text(aes(label = sprintf("%.1f%%", porcentaje * 100)),
+            position = position_stack(vjust = 0.5), size = 4, color = "white", fontface = "bold")
+```
+
+### Composición de Siniestros
+
+```{r tabla_severidad}
+tabla_sev <- sev_tipo %>%
+  mutate(
+    severidad_promedio = paste0("$", format(round(severidad_promedio), big.mark = ",")),
+    porcentaje = sprintf("%.1f%%", porcentaje * 100)
+  ) %>%
+  select(tipo_siniestro, n_siniestros, porcentaje, severidad_promedio)
+
+kable(tabla_sev,
+      col.names = c("Tipo de Siniestro", "Cantidad", "% del Total", "Severidad Promedio"),
+      align = c("l", "r", "r", "r")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+Los siniestros de tipo **`r sev_tipo$tipo_siniestro[1]`** son los más costosos en promedio, aunque representan solo el `r sprintf("%.1f%%", sev_tipo$porcentaje[1] * 100)` del total.
+
+---
+
+# Análisis Temporal
+
+## Tendencia Mensual de Siniestros
+
+```{r tendencia_mensual}
+sin_mes <- siniestros %>%
+  mutate(mes = month(fecha_siniestro, label = TRUE, abbr = FALSE)) %>%
+  group_by(mes) %>%
+  summarise(
+    n_siniestros = n(),
+    monto_total = sum(monto_siniestro),
+    severidad_promedio = mean(monto_siniestro),
+    .groups = "drop"
+  )
+
+ggplot(sin_mes, aes(x = mes, y = n_siniestros, group = 1)) +
+  geom_line(color = colores[1], linewidth = 1.5) +
+  geom_point(color = colores[1], size = 4) +
+  geom_text(aes(label = n_siniestros), vjust = -1, size = 3.5) +
+  scale_y_continuous(limits = c(0, max(sin_mes$n_siniestros) * 1.15)) +
+  labs(
+    title = "Número de Siniestros por Mes",
+    subtitle = "Análisis de estacionalidad en la ocurrencia de siniestros",
+    x = "Mes",
+    y = "Cantidad de Siniestros"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Patrones Estacionales
+
+```{r mes_stats}
+mes_max <- sin_mes %>% filter(n_siniestros == max(n_siniestros))
+mes_min <- sin_mes %>% filter(n_siniestros == min(n_siniestros))
+```
+
+- **Mes con más siniestros:** `r mes_max$mes` con `r mes_max$n_siniestros` eventos
+- **Mes con menos siniestros:** `r mes_min$mes` con `r mes_min$n_siniestros` eventos
+- **Variación:** `r sprintf("%.1f%%", ((mes_max$n_siniestros - mes_min$n_siniestros) / mes_min$n_siniestros) * 100)` de diferencia entre mes máximo y mínimo
+
+**Implicación:** Existe variabilidad estacional que debe considerarse en la planificación de reservas y capacidad operativa.
+
+---
+
+# Análisis Geográfico
+
+## Loss Ratio por Estado
+
+```{r lr_estado}
+lr_estado <- polizas %>%
+  group_by(estado) %>%
+  summarise(
+    n_polizas = n(),
+    prima_total = sum(prima_neta),
+    .groups = "drop"
+  ) %>%
+  left_join(
+    siniestros %>%
+      left_join(polizas %>% select(poliza_id, estado), by = "poliza_id") %>%
+      group_by(estado) %>%
+      summarise(
+        n_siniestros = n(),
+        siniestros_total = sum(monto_pagado),
+        .groups = "drop"
+      ),
+    by = "estado"
+  ) %>%
+  mutate(
+    n_siniestros = replace_na(n_siniestros, 0),
+    siniestros_total = replace_na(siniestros_total, 0),
+    loss_ratio = siniestros_total / prima_total,
+    penetracion = n_polizas / sum(n_polizas)
+  ) %>%
+  arrange(desc(loss_ratio))
+
+ggplot(lr_estado, aes(x = reorder(estado, loss_ratio), y = loss_ratio, fill = loss_ratio)) +
+  geom_col() +
+  geom_hline(yintercept = kpis$loss_ratio, linetype = "dashed", color = "red", linewidth = 1) +
+  scale_y_continuous(labels = percent_format()) +
+  scale_fill_gradient2(low = "green", mid = "yellow", high = "red",
+                       midpoint = 0.75, labels = percent_format()) +
+  coord_flip() +
+  labs(
+    title = "Loss Ratio por Estado",
+    subtitle = "Estados ordenados de mayor a menor siniestralidad",
+    x = NULL,
+    y = "Loss Ratio",
+    fill = "Loss Ratio"
+  ) +
+  theme(legend.position = "none")
+```
+
+### Ranking Geográfico
+
+**Top 3 Estados con Mayor Loss Ratio:**
+
+1. **`r lr_estado$estado[1]`**: `r sprintf("%.2f%%", lr_estado$loss_ratio[1] * 100)` - `r format(lr_estado$n_polizas[1], big.mark = ",")` pólizas
+2. **`r lr_estado$estado[2]`**: `r sprintf("%.2f%%", lr_estado$loss_ratio[2] * 100)` - `r format(lr_estado$n_polizas[2], big.mark = ",")` pólizas
+3. **`r lr_estado$estado[3]`**: `r sprintf("%.2f%%", lr_estado$loss_ratio[3] * 100)` - `r format(lr_estado$n_polizas[3], big.mark = ",")` pólizas
+
+**Estados con Mejor Desempeño:**
+
+- **`r lr_estado$estado[nrow(lr_estado)]`**: `r sprintf("%.2f%%", lr_estado$loss_ratio[nrow(lr_estado)] * 100)`
+- **`r lr_estado$estado[nrow(lr_estado)-1]`**: `r sprintf("%.2f%%", lr_estado$loss_ratio[nrow(lr_estado)-1] * 100)`
+
+## Penetración de Mercado
+
+```{r penetracion}
+lr_estado_top <- lr_estado %>%
+  arrange(desc(penetracion)) %>%
+  head(10)
+
+ggplot(lr_estado_top, aes(x = reorder(estado, penetracion), y = penetracion, fill = estado)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = sprintf("%.1f%%", penetracion * 100)), hjust = -0.1, size = 3.5) +
+  scale_y_continuous(labels = percent_format(), limits = c(0, max(lr_estado_top$penetracion) * 1.1)) +
+  scale_fill_manual(values = rep(colores, length.out = 10)) +
+  coord_flip() +
+  labs(
+    title = "Top 10 Estados por Penetración de Mercado",
+    subtitle = "Porcentaje de pólizas en la cartera",
+    x = NULL,
+    y = "Penetración"
+  )
+```
+
+El estado de **`r lr_estado_top$estado[1]`** concentra el `r sprintf("%.1f%%", lr_estado_top$penetracion[1] * 100)` de la cartera total.
+
+---
+
+# Segmentación de Riesgo
+
+## Matriz de Riesgo: Edad vs Tipo de Vehículo
+
+```{r matriz_riesgo}
+polizas_seg <- polizas %>%
+  mutate(segmento_edad = case_when(
+    edad_conductor < 25 ~ "Joven (<25)",
+    edad_conductor < 35 ~ "Adulto Joven (25-34)",
+    edad_conductor < 50 ~ "Adulto (35-49)",
+    TRUE ~ "Senior (50+)"
+  ))
+
+matriz <- polizas_seg %>%
+  group_by(segmento_edad, tipo_vehiculo) %>%
+  summarise(
+    n_polizas = n(),
+    prima_total = sum(prima_neta),
+    .groups = "drop"
+  ) %>%
+  left_join(
+    siniestros %>%
+      left_join(polizas_seg %>% select(poliza_id, segmento_edad, tipo_vehiculo),
+                by = "poliza_id") %>%
+      group_by(segmento_edad, tipo_vehiculo) %>%
+      summarise(
+        n_siniestros = n(),
+        siniestros_total = sum(monto_pagado),
+        .groups = "drop"
+      ),
+    by = c("segmento_edad", "tipo_vehiculo")
+  ) %>%
+  mutate(
+    n_siniestros = replace_na(n_siniestros, 0),
+    siniestros_total = replace_na(siniestros_total, 0),
+    loss_ratio = siniestros_total / prima_total
+  )
+
+ggplot(matriz, aes(x = tipo_vehiculo, y = segmento_edad, fill = loss_ratio)) +
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = sprintf("%.1f%%", loss_ratio * 100)),
+            color = "white", fontface = "bold", size = 5) +
+  scale_fill_gradient2(low = "green", mid = "yellow", high = "red",
+                       midpoint = 0.75, labels = percent_format()) +
+  labs(
+    title = "Matriz de Riesgo: Loss Ratio por Edad y Tipo de Vehículo",
+    subtitle = "Identificación de segmentos de alto riesgo",
+    x = "Tipo de Vehículo",
+    y = "Segmento de Edad",
+    fill = "Loss Ratio"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right"
+  )
+```
+
+### Segmentos de Alto Riesgo
+
+```{r segmentos_riesgo}
+top_riesgo <- matriz %>%
+  arrange(desc(loss_ratio)) %>%
+  head(5)
+
+kable(top_riesgo %>%
+        select(segmento_edad, tipo_vehiculo, n_polizas, loss_ratio) %>%
+        mutate(loss_ratio = sprintf("%.2f%%", loss_ratio * 100)),
+      col.names = c("Segmento Edad", "Tipo Vehículo", "Pólizas", "Loss Ratio"),
+      align = c("l", "l", "r", "r")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  row_spec(1, bold = TRUE, background = "#f8d7da")
+```
+
+La combinación de **`r top_riesgo$segmento_edad[1]`** con vehículos tipo **`r top_riesgo$tipo_vehiculo[1]`** presenta el mayor riesgo con un Loss Ratio de `r sprintf("%.2f%%", top_riesgo$loss_ratio[1] * 100)`.
+
+---
+
+# Conclusiones y Recomendaciones
+
+## Conclusiones Principales
+
+1. **Rentabilidad General:** La cartera presenta un Loss Ratio de `r sprintf("%.2f%%", kpis$loss_ratio * 100)`, `r ifelse(kpis$loss_ratio <= 0.75, "cumpliendo", "superando")` el objetivo sectorial del 75%.
+
+2. **Variabilidad por Segmento:** Existen diferencias significativas en rentabilidad entre canales de venta, tipos de vehículo y regiones geográficas.
+
+3. **Factores de Riesgo:** La edad del conductor y el tipo de vehículo son variables críticas que impactan tanto la frecuencia como la severidad.
+
+4. **Estacionalidad:** Se observan patrones temporales con variación de `r sprintf("%.1f%%", ((mes_max$n_siniestros - mes_min$n_siniestros) / mes_min$n_siniestros) * 100)` entre el mes de mayor y menor siniestralidad.
+
+## Recomendaciones Estratégicas
+
+### A Corto Plazo
+
+1. **Revisión de Tarifas:** Ajustar primas en segmentos con Loss Ratio superior al 80%, particularmente en la combinación `r top_riesgo$segmento_edad[1]` + `r top_riesgo$tipo_vehiculo[1]`.
+
+2. **Optimización de Canales:** Incrementar volumen en el canal `r lr_canal$canal_venta[nrow(lr_canal)]` que muestra mejor rentabilidad.
+
+3. **Enfoque Geográfico:** Revisar condiciones de suscripción en estados con Loss Ratio superior al promedio.
+
+### A Mediano Plazo
+
+1. **Segmentación Avanzada:** Implementar modelos predictivos de frecuencia y severidad para tarificación más precisa.
+
+2. **Programas de Prevención:** Desarrollar iniciativas de prevención de siniestros dirigidas a conductores jóvenes.
+
+3. **Análisis de Rentabilidad:** Monitorear mensualmente los KPIs por segmento para detección temprana de desviaciones.
+
+### A Largo Plazo
+
+1. **Diversificación:** Balancear la cartera aumentando participación en segmentos de menor riesgo.
+
+2. **Tecnología:** Implementar telemática para mejor evaluación de riesgo individual.
+
+3. **Experiencia del Cliente:** Mejorar procesos de atención de siniestros para reducir costos operativos.
+
+---
+
+# Anexo Técnico
+
+## Metodología
+
+Este análisis se basa en:
+
+- **Datos:** `r format(kpis$n_polizas, big.mark = ",")` pólizas y `r format(kpis$n_siniestros, big.mark = ",")` siniestros
+- **Período:** Cobertura completa de vigencia de pólizas
+- **Calibración:** Parámetros basados en estadísticas de CONDUSEF y AMIS
+- **Herramientas:** R, tidyverse, ggplot2, RSQLite
+
+## Definiciones
+
+- **Loss Ratio:** Siniestros Pagados / Primas Colectadas
+- **Frecuencia:** Número de Siniestros / Número de Pólizas
+- **Severidad:** Monto Promedio por Siniestro
+- **Penetración:** Proporción de pólizas en cada segmento
+
+---
+
+<div style="text-align: center; padding: 20px; background-color: #f8f9fa; margin-top: 40px;">
+**Informe generado automáticamente el `r format(Sys.Date(), '%d de %B de %Y')`**
+
+*Andrés González Ortega*
+*Proyecto: CarteraSeguroAutos*
+</div>

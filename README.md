@@ -23,6 +23,7 @@ CarteraSeguroAutos/
 │   ├── TrendAnalysis.R            # Análisis de tendencias temporales
 │   └── GeoRiskAnalysis.R          # Análisis geográfico y segmentación
 ├── app.R                          # Dashboard Shiny interactivo
+├── InformeEjecutivo.Rmd           # Reporte ejecutivo en RMarkdown
 ├── .Rprofile                      # Activación automática de renv
 ├── renv.lock                      # Archivo de dependencias renv
 ├── SETUP.md                       # Instrucciones de configuración renv
@@ -106,6 +107,18 @@ El dashboard abrirá automáticamente en tu navegador web con 8 pestañas de an�
 - Análisis Geográfico
 - Segmentación de Riesgo
 - Exploración de Datos
+
+6. Generar informe ejecutivo (opcional):
+```r
+# Generar reporte profesional en HTML
+rmarkdown::render("InformeEjecutivo.Rmd")
+```
+
+El informe se genera como archivo HTML profesional con:
+- Análisis narrativo completo sin código técnico visible
+- Gráficos y tablas embebidos automáticamente
+- Formato profesional listo para compartir con audiencias no técnicas
+- Conclusiones y recomendaciones estratégicas
 
 ## Diccionario de Datos
 
@@ -204,18 +217,19 @@ Resultados de la generación actual (2025-09-02):
 - Base de datos SQLite con pólizas y siniestros
 - Scripts de análisis exploratorio (EDA, tendencias, segmentación)
 - Dashboard interactivo Shiny con 8 pestañas de análisis
+- Informe ejecutivo automatizado en RMarkdown (HTML/PDF)
 - Sistema de gestión de dependencias con renv
 - Documentación completa
 
 **Posibles Mejoras Futuras:**
 1. Modelado predictivo de frecuencia/severidad con GLM
-2. Reportes automatizados en PDF/HTML con RMarkdown
-3. Integración con bases de datos externas
-4. Funcionalidades de filtrado dinámico en dashboard
-5. Exportación de gráficos y tablas desde dashboard
-6. Análisis de series temporales con predicciones
-7. Tests unitarios con testthat
-8. Despliegue del dashboard en Shiny Server o shinyapps.io
+2. Integración con bases de datos externas (MySQL, PostgreSQL)
+3. Funcionalidades de filtrado dinámico en dashboard
+4. Exportación de gráficos y tablas desde dashboard
+5. Análisis de series temporales con predicciones
+6. Tests unitarios con testthat
+7. Despliegue del dashboard en Shiny Server o shinyapps.io
+8. Reportes programados automáticamente (mensual/trimestral)
 
 ## Autor
 
