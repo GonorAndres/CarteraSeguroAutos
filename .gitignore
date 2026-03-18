@@ -2,10 +2,22 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# renv
 renv/library/
 renv/local/
 renv/staging/
+
+# HTML output
 *.html
 *_files/
-# Exception: include executive report
 !InformeEjecutivo.html
+
+# Subagent outputs
+subagents_outputs/
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# System
+.DS_Store

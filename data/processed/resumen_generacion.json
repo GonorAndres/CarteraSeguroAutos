@@ -1,18 +1,32 @@
 {
-  "fecha_generacion": "2025-09-02",
+  "fecha_generacion": "2026-03-18",
+  "version": "2.0-multianio",
   "parametros": {
-    "n_policies": 52000,
+    "n_new_per_year": 12000,
     "lambda_freq": 0.085,
     "avg_severity": 24000,
     "target_loss_ratio": 0.75,
-    "missing_rate": 0.06
+    "missing_rate": 0.06,
+    "retention_rate": 0.82,
+    "severity_inflation": 0.04,
+    "anios": [2020, 2021, 2022, 2023, 2024]
   },
   "kpis": {
-    "loss_ratio": 0.7428,
-    "frecuencia": 0.0895,
-    "severidad": 27499.5652,
-    "n_polizas": 52000,
-    "n_siniestros": 2332,
+    "loss_ratio": 0.7111,
+    "frecuencia": 0.0838,
+    "severidad": 29396.45,
+    "n_polizas": 140385,
+    "n_siniestros": 11762,
+    "prima_total": 308263191.2103,
+    "pagado_total": 219195394.03,
     "target_achieved": true
+  },
+  "estructura": {
+    "n_polizas": 140385,
+    "n_siniestros": 11762,
+    "n_pagos": 24900,
+    "anios": [2020, 2021, 2022, 2023, 2024],
+    "estados": ["Baja California", "Chihuahua", "Ciudad de Mexico", "Coahuila", "Estado de Mexico", "Guanajuato", "Jalisco", "Michoacan", "Nuevo Leon", "Puebla", "Sonora", "Tamaulipas", "Veracruz"],
+    "tipos_vehiculo": ["Hatchback", "Sedan", "SUV"]
   }
 }
