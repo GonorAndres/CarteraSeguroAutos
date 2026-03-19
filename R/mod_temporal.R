@@ -5,8 +5,9 @@
 temporalUI <- function(id) {
   ns <- NS(id)
   tagList(
+    h3("Analisis Temporal"),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = breakpoints(sm = 12, md = 6),
       card(
         card_header("Siniestros por Mes (Año sobre Año)"),
         plotlyOutput(ns("plot_mensual"), height = "350px")
@@ -17,7 +18,7 @@ temporalUI <- function(id) {
       )
     ),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = breakpoints(sm = 12, md = 6),
       card(
         card_header("Composicion por Tipo y Mes"),
         plotlyOutput(ns("plot_tipo_mes"), height = "350px")
@@ -47,7 +48,8 @@ temporalServer <- function(id, filtered_data) {
               colors = PALETTE_CATEGORICAL,
               type = "scatter", mode = "lines+markers") %>%
         plotly_default_layout(xlab = "Mes", ylab = "Siniestros") %>%
-        layout(xaxis = list(dtick = 1))
+        layout(xaxis = list(dtick = 1)) %>%
+        plotly_clean()
     })
 
     output$plot_sev_mes <- renderPlotly({
@@ -61,7 +63,8 @@ temporalServer <- function(id, filtered_data) {
               colors = PALETTE_CATEGORICAL,
               type = "scatter", mode = "lines+markers") %>%
         plotly_default_layout(xlab = "Mes", ylab = "Severidad Media (MXN)") %>%
-        layout(xaxis = list(dtick = 1))
+        layout(xaxis = list(dtick = 1)) %>%
+        plotly_clean()
     })
 
     output$plot_tipo_mes <- renderPlotly({
@@ -74,7 +77,8 @@ temporalServer <- function(id, filtered_data) {
               colors = PALETTE_CATEGORICAL,
               type = "bar") %>%
         plotly_default_layout(xlab = "Mes", ylab = "Siniestros") %>%
-        layout(barmode = "stack", xaxis = list(dtick = 1))
+        layout(barmode = "stack", xaxis = list(dtick = 1)) %>%
+        plotly_clean()
     })
 
     output$plot_lag <- renderPlotly({
@@ -85,7 +89,8 @@ temporalServer <- function(id, filtered_data) {
       plot_ly(lag_data, x = ~dias_reporte, type = "histogram",
               nbinsx = 16,
               marker = list(color = PALETTE$primary)) %>%
-        plotly_default_layout(xlab = "Dias entre Ocurrencia y Reporte", ylab = "Frecuencia")
+        plotly_default_layout(xlab = "Dias entre Ocurrencia y Reporte", ylab = "Frecuencia") %>%
+        plotly_clean()
     })
 
     output$tabla_mensual <- renderDT({

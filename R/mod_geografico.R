@@ -9,8 +9,9 @@ HAS_LEAFLET <- requireNamespace("leaflet", quietly = TRUE) &&
 geograficoUI <- function(id) {
   ns <- NS(id)
   tagList(
+    h3("Analisis Geografico"),
     layout_columns(
-      col_widths = c(8, 4),
+      col_widths = breakpoints(sm = 12, md = c(8, 4)),
       card(
         card_header(
           "Mapa de Riesgo por Estado",
@@ -30,7 +31,7 @@ geograficoUI <- function(id) {
       )
     ),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = breakpoints(sm = 12, md = 6),
       card(
         card_header("Ranking de Estados"),
         plotlyOutput(ns("plot_ranking"), height = "400px")
@@ -112,8 +113,9 @@ geograficoServer <- function(id, filtered_data) {
                 marker = list(color = colors),
                 text = ~estado, customdata = ~estado,
                 hovertemplate = "%{text}: %{x:.3f}<extra></extra>") %>%
-          plotly_default_layout(xlab = metric, ylab = "") %>%
-          layout(yaxis = list(tickfont = list(size = 11)))
+          plotly_default_layout(xlab = METRIC_LABELS[metric] %||% metric, ylab = "") %>%
+          layout(yaxis = list(tickfont = list(size = 11))) %>%
+          plotly_clean()
       })
     }
 
@@ -142,7 +144,8 @@ geograficoServer <- function(id, filtered_data) {
       plot_ly(stats, y = ~reorder(estado, .data[[metric]]),
               x = ~.data[[metric]], type = "bar", orientation = "h",
               marker = list(color = PALETTE$primary)) %>%
-        plotly_default_layout(xlab = metric, ylab = "")
+        plotly_default_layout(xlab = METRIC_LABELS[metric] %||% metric, ylab = "") %>%
+        plotly_clean()
     })
 
     output$plot_scatter <- renderPlotly({
@@ -153,7 +156,8 @@ geograficoServer <- function(id, filtered_data) {
               marker = list(size = ~sqrt(n_polizas) / 3,
                             color = PALETTE$primary, opacity = 0.7)) %>%
         plotly_default_layout(xlab = "Frecuencia", ylab = "Severidad Media (MXN)") %>%
-        layout(xaxis = list(tickformat = ".1%"))
+        layout(xaxis = list(tickformat = ".1%")) %>%
+        plotly_clean()
     })
   })
 }

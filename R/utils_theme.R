@@ -126,3 +126,48 @@ plotly_bar <- function(data, x, y, color = PALETTE$primary,
   }
   p %>% plotly_default_layout()
 }
+
+# --- Column label lookup for DT tables ---
+COLUMN_LABELS <- c(
+  canal_venta = "Canal de Venta",
+  tipo_vehiculo = "Tipo Vehiculo",
+  marca_vehiculo = "Marca",
+  modelo_vehiculo = "Modelo",
+  n_polizas = "Polizas",
+  prima_total = "Prima Total",
+  n_siniestros = "Siniestros",
+  siniestros_total = "Siniestros Total",
+  loss_ratio = "Loss Ratio",
+  frecuencia = "Frecuencia",
+  rango_edad = "Rango Edad",
+  segmento_edad = "Segmento Edad",
+  segmento_score = "Score Crediticio",
+  tipo_siniestro = "Tipo Siniestro",
+  severidad_media = "Severidad Media",
+  severidad_mediana = "Severidad Mediana",
+  severidad_sd = "Desv. Estandar",
+  severidad_min = "Minimo",
+  severidad_max = "Maximo",
+  n = "Cantidad",
+  anio_suscripcion = "Anio"
+)
+
+# Human-readable metric labels for geographic module
+METRIC_LABELS <- c(
+  loss_ratio = "Loss Ratio",
+  frecuencia = "Frecuencia",
+  severidad_media = "Severidad Media (MXN)",
+  n_polizas = "Polizas"
+)
+
+# Helper to rename columns for DT display
+humanize_colnames <- function(df) {
+  current <- names(df)
+  new_names <- ifelse(current %in% names(COLUMN_LABELS), COLUMN_LABELS[current], current)
+  setNames(df, new_names)
+}
+
+# Clean plotly config (hide modebar)
+plotly_clean <- function(p) {
+  p %>% plotly::config(displayModeBar = FALSE)
+}

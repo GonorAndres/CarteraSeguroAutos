@@ -10,7 +10,7 @@ fraudUI <- function(id) {
 
     # Value boxes
     layout_columns(
-      col_widths = c(3, 3, 3, 3),
+      col_widths = breakpoints(sm = 6, md = 3),
       value_box(
         title = "Siniestros Analizados",
         value = textOutput(ns("vb_total")),

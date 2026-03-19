@@ -170,7 +170,7 @@ ibnrUI <- function(id) {
     nav_panel(
       title = "Estimacion IBNR", icon = icon("calculator"),
       layout_columns(
-        col_widths = c(4, 4, 4),
+        col_widths = breakpoints(sm = 12, md = 4),
         value_box(title = "IBNR Total (Chain Ladder)", value = textOutput(ns("vb_ibnr_cl")),
                   showcase = icon("link"), theme = "primary"),
         value_box(title = "IBNR Total (Bornhuetter-Ferguson)", value = textOutput(ns("vb_ibnr_bf")),
@@ -192,7 +192,7 @@ ibnrUI <- function(id) {
     nav_panel(
       title = "Diagnosticos", icon = icon("chart-line"),
       layout_columns(
-        col_widths = c(6, 6),
+        col_widths = breakpoints(sm = 12, md = 6),
         card(card_header("IBNR y Errores Estandar por Año"),
              plotlyOutput(ns("plot_se"), height = "400px")),
         card(card_header("Factores de Desarrollo por Periodo"),

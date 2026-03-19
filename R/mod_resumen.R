@@ -5,8 +5,9 @@
 resumenUI <- function(id) {
   ns <- NS(id)
   tagList(
+    h3("Resumen Ejecutivo"),
     layout_columns(
-      col_widths = c(4, 4, 4),
+      col_widths = breakpoints(sm = 12, md = 4),
       value_box(
         title = "Total Polizas", value = textOutput(ns("vb_polizas")),
         showcase = icon("file-contract"), theme = "primary"
@@ -21,7 +22,7 @@ resumenUI <- function(id) {
       )
     ),
     layout_columns(
-      col_widths = c(4, 4, 4),
+      col_widths = breakpoints(sm = 12, md = 4),
       value_box(
         title = "Frecuencia", value = textOutput(ns("vb_freq")),
         showcase = icon("chart-line"), theme = "warning"
@@ -36,14 +37,14 @@ resumenUI <- function(id) {
       )
     ),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = breakpoints(sm = 12, md = 6),
       card(
         card_header("Loss Ratio por Canal de Venta"),
         plotlyOutput(ns("plot_lr_canal"), height = "320px")
       ),
       card(
         card_header("Distribucion de Siniestros por Tipo"),
-        plotlyOutput(ns("plot_dist_tipo"), height = "320px")
+        plotlyOutput(ns("plot_dist_tipo"), height = "380px")
       )
     ),
     card(
@@ -74,7 +75,8 @@ resumenServer <- function(id, filtered_data) {
       plot_ly(lr, x = ~canal_venta, y = ~loss_ratio, type = "bar",
               marker = list(color = PALETTE$primary)) %>%
         plotly_default_layout(xlab = "Canal", ylab = "Loss Ratio") %>%
-        layout(yaxis = list(tickformat = ".1%"))
+        layout(yaxis = list(tickformat = ".1%")) %>%
+        plotly_clean()
     })
 
     output$plot_dist_tipo <- renderPlotly({
@@ -84,7 +86,9 @@ resumenServer <- function(id, filtered_data) {
 
       plot_ly(dist, labels = ~tipo_siniestro, values = ~n, type = "pie",
               marker = list(colors = PALETTE_CATEGORICAL[1:nrow(dist)])) %>%
-        plotly_default_layout()
+        plotly_default_layout() %>%
+        layout(legend = list(orientation = "v", x = 1.02, y = 0.5)) %>%
+        plotly_clean()
     })
 
     output$plot_tendencia <- renderPlotly({
@@ -96,13 +100,15 @@ resumenServer <- function(id, filtered_data) {
       if (length(unique(mensual$anio)) > 1) {
         plot_ly(mensual, x = ~mes, y = ~n_siniestros, color = ~factor(anio),
                 colors = PALETTE_CATEGORICAL, type = "scatter", mode = "lines+markers") %>%
-          plotly_default_layout(xlab = "Mes", ylab = "Siniestros")
+          plotly_default_layout(xlab = "Mes", ylab = "Siniestros") %>%
+          plotly_clean()
       } else {
         plot_ly(mensual, x = ~mes, y = ~n_siniestros, type = "scatter",
                 mode = "lines+markers",
                 line = list(color = PALETTE$primary),
                 marker = list(color = PALETTE$primary)) %>%
-          plotly_default_layout(xlab = "Mes", ylab = "Siniestros")
+          plotly_default_layout(xlab = "Mes", ylab = "Siniestros") %>%
+          plotly_clean()
       }
     })
   })

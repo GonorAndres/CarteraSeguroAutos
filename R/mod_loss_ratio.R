@@ -5,8 +5,9 @@
 lossRatioUI <- function(id) {
   ns <- NS(id)
   tagList(
+    h3("Analisis de Loss Ratio"),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = breakpoints(sm = 12, md = 6),
       card(
         card_header("Loss Ratio por Canal de Venta"),
         plotlyOutput(ns("plot_canal"), height = "350px")
@@ -17,7 +18,7 @@ lossRatioUI <- function(id) {
       )
     ),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = breakpoints(sm = 12, md = 6),
       card(
         card_header("Loss Ratio por Marca"),
         plotlyOutput(ns("plot_marca"), height = "350px")
@@ -45,7 +46,8 @@ lossRatioServer <- function(id, filtered_data) {
               type = "bar", orientation = "h",
               marker = list(color = PALETTE$primary)) %>%
         plotly_default_layout(xlab = "Loss Ratio", ylab = "") %>%
-        layout(xaxis = list(tickformat = ".1%"))
+        layout(xaxis = list(tickformat = ".1%")) %>%
+        plotly_clean()
     })
 
     output$plot_vehiculo <- renderPlotly({
@@ -56,7 +58,8 @@ lossRatioServer <- function(id, filtered_data) {
               type = "bar", orientation = "h",
               marker = list(color = PALETTE$secondary)) %>%
         plotly_default_layout(xlab = "Loss Ratio", ylab = "") %>%
-        layout(xaxis = list(tickformat = ".1%"))
+        layout(xaxis = list(tickformat = ".1%")) %>%
+        plotly_clean()
     })
 
     output$plot_marca <- renderPlotly({
@@ -67,7 +70,8 @@ lossRatioServer <- function(id, filtered_data) {
               type = "bar", orientation = "h",
               marker = list(color = PALETTE$accent)) %>%
         plotly_default_layout(xlab = "Loss Ratio", ylab = "") %>%
-        layout(xaxis = list(tickformat = ".1%"))
+        layout(xaxis = list(tickformat = ".1%")) %>%
+        plotly_clean()
     })
 
     output$plot_anio <- renderPlotly({
@@ -78,17 +82,18 @@ lossRatioServer <- function(id, filtered_data) {
       plot_ly(lr, x = ~factor(anio_suscripcion), y = ~loss_ratio,
               type = "bar", marker = list(color = PALETTE$success)) %>%
         plotly_default_layout(xlab = "Año", ylab = "Loss Ratio") %>%
-        layout(yaxis = list(tickformat = ".1%"))
+        layout(yaxis = list(tickformat = ".1%")) %>%
+        plotly_clean()
     })
 
     output$tabla_detalle <- renderDT({
       d <- filtered_data()
       lr <- calc_loss_ratio(d$polizas, d$siniestros, canal_venta, tipo_vehiculo) %>%
         arrange(desc(loss_ratio))
-      datatable(lr, options = list(pageLength = 15, scrollX = TRUE),
+      datatable(humanize_colnames(lr), options = list(pageLength = 15, scrollX = TRUE),
                 rownames = FALSE) %>%
-        formatPercentage("loss_ratio", 2) %>%
-        formatCurrency(c("prima_total", "siniestros_total"), currency = "$", digits = 0)
+        formatPercentage("Loss Ratio", 2) %>%
+        formatCurrency(c("Prima Total", "Siniestros Total"), currency = "$", digits = 0)
     })
   })
 }

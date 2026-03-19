@@ -9,7 +9,7 @@ scenarioUI <- function(id) {
     h3("Analisis de Escenarios y Stress Testing"),
 
     layout_columns(
-      col_widths = c(3, 9),
+      col_widths = breakpoints(sm = 12, md = c(3, 9)),
 
       # --- Panel de controles ---
       card(
@@ -41,7 +41,7 @@ scenarioUI <- function(id) {
       tagList(
         # Value boxes
         layout_columns(
-          col_widths = c(3, 3, 3, 3),
+          col_widths = breakpoints(sm = 6, md = 3),
           value_box(
             title = "VaR 99.5%", value = textOutput(ns("vb_var995")),
             showcase = icon("shield-halved"), theme = "danger"
@@ -143,8 +143,8 @@ scenarioServer <- function(id, filtered_data) {
       )
     })
 
-    # --- Simulacion (solo al presionar boton) ---
-    sim_results <- eventReactive(input$run_sim, {
+    # --- Simulacion (auto-run on load + on button click) ---
+    sim_results <- eventReactive(list(input$run_sim, TRUE), ignoreNULL = FALSE, {
       tryCatch({
         params <- fitted_params()
         req(!is.null(params))

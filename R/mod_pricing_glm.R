@@ -23,7 +23,7 @@ pricingGlmUI <- function(id) {
         uiOutput(ns("model_status_banner"))
       ),
       layout_columns(
-        col_widths = c(4, 4, 4),
+        col_widths = breakpoints(sm = 12, md = 4),
         value_box(
           title = "Observaciones (Frecuencia)",
           value = textOutput(ns("n_obs_freq")),
@@ -44,7 +44,7 @@ pricingGlmUI <- function(id) {
         )
       ),
       layout_columns(
-        col_widths = c(6, 6),
+        col_widths = breakpoints(sm = 12, md = 6),
         card(
           card_header("Coeficientes - Modelo de Frecuencia (Poisson)"),
           DTOutput(ns("tbl_freq_coefs"))
@@ -67,7 +67,7 @@ pricingGlmUI <- function(id) {
       title = "Tabla de Relatividades",
       icon = icon("table"),
       layout_columns(
-        col_widths = c(6, 6),
+        col_widths = breakpoints(sm = 12, md = 6),
         card(
           card_header("Relatividades - Frecuencia"),
           DTOutput(ns("tbl_rel_freq"))
@@ -86,7 +86,7 @@ pricingGlmUI <- function(id) {
       title = "Cotizador Interactivo",
       icon = icon("calculator"),
       layout_columns(
-        col_widths = c(4, 8),
+        col_widths = breakpoints(sm = 12, md = c(4, 8)),
 
         # Panel de inputs
         card(
@@ -127,7 +127,7 @@ pricingGlmUI <- function(id) {
         # Panel de resultados
         tagList(
           layout_columns(
-            col_widths = c(3, 3, 3, 3),
+            col_widths = breakpoints(sm = 6, md = 3),
             value_box(
               title = "Frecuencia Esperada",
               value = textOutput(ns("cot_freq")),
@@ -172,7 +172,7 @@ pricingGlmUI <- function(id) {
       title = "Diagnosticos",
       icon = icon("stethoscope"),
       layout_columns(
-        col_widths = c(6, 6),
+        col_widths = breakpoints(sm = 12, md = 6),
         card(
           card_header("Residuos Deviance vs Ajustados - Frecuencia"),
           plotly::plotlyOutput(ns("plot_resid_freq"), height = "380px")
@@ -183,7 +183,7 @@ pricingGlmUI <- function(id) {
         )
       ),
       layout_columns(
-        col_widths = c(6, 6),
+        col_widths = breakpoints(sm = 12, md = 6),
         card(
           card_header("QQ Plot - Frecuencia"),
           plotly::plotlyOutput(ns("plot_qq_freq"), height = "380px")
@@ -196,7 +196,7 @@ pricingGlmUI <- function(id) {
       card(
         card_header("Observado vs Predicho por Factor"),
         layout_columns(
-          col_widths = c(4, 8),
+          col_widths = breakpoints(sm = 12, md = c(4, 8)),
           selectInput(
             ns("diag_factor"), "Factor de Analisis",
             choices = c(
@@ -286,7 +286,7 @@ pricingGlmServer <- function(id, filtered_data) {
       )
 
       tryCatch(
-        {
+        suppressWarnings(
           glm(
             n_claims ~ rango_edad + genero + tipo_vehiculo +
               zona_riesgo + canal_venta + segmento_score,
@@ -294,30 +294,10 @@ pricingGlmServer <- function(id, filtered_data) {
             offset  = log(exposicion),
             data    = df
           )
-        },
+        ),
         error = function(e) {
-          showNotification(
-            paste("Error en modelo de frecuencia:", e$message),
-            type = "error", duration = 10
-          )
+          message("GLM frecuencia error: ", e$message)
           NULL
-        },
-        warning = function(w) {
-          # Catch convergence warnings but still return the model
-          mod <- suppressWarnings(
-            glm(
-              n_claims ~ rango_edad + genero + tipo_vehiculo +
-                zona_riesgo + canal_venta + segmento_score,
-              family  = poisson(link = "log"),
-              offset  = log(exposicion),
-              data    = df
-            )
-          )
-          showNotification(
-            paste("Advertencia en frecuencia:", w$message),
-            type = "warning", duration = 8
-          )
-          mod
         }
       )
     })
@@ -332,35 +312,17 @@ pricingGlmServer <- function(id, filtered_data) {
       )
 
       tryCatch(
-        {
+        suppressWarnings(
           glm(
             monto_siniestro ~ tipo_siniestro + tipo_vehiculo +
               rango_edad + zona_riesgo,
             family = Gamma(link = "log"),
             data   = df
           )
-        },
+        ),
         error = function(e) {
-          showNotification(
-            paste("Error en modelo de severidad:", e$message),
-            type = "error", duration = 10
-          )
+          message("GLM severidad error: ", e$message)
           NULL
-        },
-        warning = function(w) {
-          mod <- suppressWarnings(
-            glm(
-              monto_siniestro ~ tipo_siniestro + tipo_vehiculo +
-                rango_edad + zona_riesgo,
-              family = Gamma(link = "log"),
-              data   = df
-            )
-          )
-          showNotification(
-            paste("Advertencia en severidad:", w$message),
-            type = "warning", duration = 8
-          )
-          mod
         }
       )
     })
@@ -370,12 +332,20 @@ pricingGlmServer <- function(id, filtered_data) {
     # ====================================================================
     tidy_freq <- reactive({
       req(freq_model())
-      broom::tidy(freq_model(), exponentiate = TRUE, conf.int = TRUE)
+      # Use conf.int=FALSE to avoid slow profiling on large datasets
+      # Compute CI manually from std.error instead
+      t <- broom::tidy(freq_model(), exponentiate = TRUE, conf.int = FALSE)
+      t$conf.low  <- exp(log(t$estimate) - 1.96 * t$std.error)
+      t$conf.high <- exp(log(t$estimate) + 1.96 * t$std.error)
+      t
     })
 
     tidy_sev <- reactive({
       req(sev_model())
-      broom::tidy(sev_model(), exponentiate = TRUE, conf.int = TRUE)
+      t <- broom::tidy(sev_model(), exponentiate = TRUE, conf.int = FALSE)
+      t$conf.low  <- exp(log(t$estimate) - 1.96 * t$std.error)
+      t$conf.high <- exp(log(t$estimate) + 1.96 * t$std.error)
+      t
     })
 
     # Build relativities table from a tidy model output

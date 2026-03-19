@@ -9,10 +9,13 @@ source("global.R")
 ui <- page_navbar(
   title = "Siniestralidad Auto Mexico",
   theme = app_theme,
-  fillable = TRUE,
+  fillable = FALSE,
+  header = tags$head(
+    tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg")
+  ),
   sidebar = sidebar(
     title = "Filtros",
-    width = 280,
+    width = 250,
     sidebarFiltersUI("filters")
   ),
 

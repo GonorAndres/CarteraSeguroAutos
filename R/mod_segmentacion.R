@@ -5,8 +5,9 @@
 segmentacionUI <- function(id) {
   ns <- NS(id)
   tagList(
+    h3("Segmentacion de Riesgo"),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = breakpoints(sm = 12, md = 6),
       card(
         card_header("Loss Ratio por Segmento de Edad"),
         plotlyOutput(ns("plot_edad"), height = "350px")
@@ -46,7 +47,8 @@ segmentacionServer <- function(id, filtered_data) {
               type = "bar", orientation = "h",
               marker = list(color = colors)) %>%
         plotly_default_layout(xlab = "Loss Ratio", ylab = "") %>%
-        layout(xaxis = list(tickformat = ".1%"))
+        layout(xaxis = list(tickformat = ".1%")) %>%
+        plotly_clean()
     })
 
     output$plot_score <- renderPlotly({
@@ -57,7 +59,8 @@ segmentacionServer <- function(id, filtered_data) {
       plot_ly(f, x = ~segmento_score, y = ~frecuencia, type = "bar",
               marker = list(color = PALETTE$secondary)) %>%
         plotly_default_layout(xlab = "Segmento Score", ylab = "Frecuencia") %>%
-        layout(yaxis = list(tickformat = ".2%"))
+        layout(yaxis = list(tickformat = ".2%")) %>%
+        plotly_clean()
     })
 
     output$plot_heatmap <- renderPlotly({
@@ -78,7 +81,8 @@ segmentacionServer <- function(id, filtered_data) {
               hoverinfo = "text",
               showscale = TRUE) %>%
         plotly_default_layout(xlab = "Tipo Vehiculo", ylab = "Segmento Edad") %>%
-        layout(coloraxis = list(colorbar = list(title = "Loss Ratio")))
+        layout(coloraxis = list(colorbar = list(title = "Loss Ratio"))) %>%
+        plotly_clean()
     })
 
     output$tabla_segmentos <- renderDT({
@@ -86,10 +90,10 @@ segmentacionServer <- function(id, filtered_data) {
       lr <- calc_loss_ratio(d$polizas, d$siniestros, segmento_edad, tipo_vehiculo) %>%
         arrange(desc(loss_ratio))
 
-      datatable(lr, options = list(pageLength = 20, scrollX = TRUE),
+      datatable(humanize_colnames(lr), options = list(pageLength = 20, scrollX = TRUE),
                 rownames = FALSE) %>%
-        formatPercentage("loss_ratio", 2) %>%
-        formatCurrency(c("prima_total", "siniestros_total"), currency = "$", digits = 0)
+        formatPercentage("Loss Ratio", 2) %>%
+        formatCurrency(c("Prima Total", "Siniestros Total"), currency = "$", digits = 0)
     })
   })
 }

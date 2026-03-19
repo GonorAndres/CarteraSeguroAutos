@@ -5,8 +5,9 @@
 severidadUI <- function(id) {
   ns <- NS(id)
   tagList(
+    h3("Analisis de Severidad"),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = breakpoints(sm = 12, md = 6),
       card(
         card_header("Severidad por Tipo de Siniestro"),
         plotlyOutput(ns("plot_tipo"), height = "350px")
@@ -17,7 +18,7 @@ severidadUI <- function(id) {
       )
     ),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = breakpoints(sm = 12, md = 6),
       card(
         card_header("Severidad por Año"),
         plotlyOutput(ns("plot_anio"), height = "350px")
@@ -44,7 +45,8 @@ severidadServer <- function(id, filtered_data) {
       plot_ly(s, y = ~reorder(tipo_siniestro, severidad_media),
               x = ~severidad_media, type = "bar", orientation = "h",
               marker = list(color = PALETTE$danger)) %>%
-        plotly_default_layout(xlab = "Severidad Media (MXN)", ylab = "")
+        plotly_default_layout(xlab = "Severidad Media (MXN)", ylab = "") %>%
+        plotly_clean()
     })
 
     output$plot_hist <- renderPlotly({
@@ -52,7 +54,8 @@ severidadServer <- function(id, filtered_data) {
       plot_ly(d$siniestros, x = ~monto_siniestro, type = "histogram",
               nbinsx = 50,
               marker = list(color = PALETTE$primary, line = list(width = 0.5, color = "white"))) %>%
-        plotly_default_layout(xlab = "Monto Siniestro (MXN)", ylab = "Frecuencia")
+        plotly_default_layout(xlab = "Monto Siniestro (MXN)", ylab = "Frecuencia") %>%
+        plotly_clean()
     })
 
     output$plot_anio <- renderPlotly({
@@ -61,7 +64,8 @@ severidadServer <- function(id, filtered_data) {
         arrange(anio_ocurrencia)
       plot_ly(s, x = ~factor(anio_ocurrencia), y = ~severidad_media,
               type = "bar", marker = list(color = PALETTE$accent)) %>%
-        plotly_default_layout(xlab = "Año", ylab = "Severidad Media (MXN)")
+        plotly_default_layout(xlab = "Año", ylab = "Severidad Media (MXN)") %>%
+        plotly_clean()
     })
 
     output$plot_vehiculo <- renderPlotly({
@@ -73,17 +77,18 @@ severidadServer <- function(id, filtered_data) {
       plot_ly(s, y = ~reorder(tipo_vehiculo, severidad_media),
               x = ~severidad_media, type = "bar", orientation = "h",
               marker = list(color = PALETTE$secondary)) %>%
-        plotly_default_layout(xlab = "Severidad Media (MXN)", ylab = "")
+        plotly_default_layout(xlab = "Severidad Media (MXN)", ylab = "") %>%
+        plotly_clean()
     })
 
     output$tabla_sev <- renderDT({
       d <- filtered_data()
       s <- calc_severity(d$siniestros, tipo_siniestro) %>%
         arrange(desc(severidad_media))
-      datatable(s, options = list(pageLength = 10, scrollX = TRUE),
+      datatable(humanize_colnames(s), options = list(pageLength = 10, scrollX = TRUE),
                 rownames = FALSE) %>%
-        formatCurrency(c("severidad_media", "severidad_mediana", "severidad_sd",
-                         "severidad_min", "severidad_max"),
+        formatCurrency(c("Severidad Media", "Severidad Mediana", "Desv. Estandar",
+                         "Minimo", "Maximo"),
                        currency = "$", digits = 0)
     })
   })
