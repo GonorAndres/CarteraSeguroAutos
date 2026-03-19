@@ -11,7 +11,8 @@ WORKDIR /srv/shiny-server/app
 COPY renv.lock renv.lock
 COPY renv/activate.R renv/activate.R
 COPY .Rprofile .Rprofile
-RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
+RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)" \
+    && R -e "install.packages('shinyWidgets', repos = 'https://cloud.r-project.org')"
 
 # Copy application
 COPY . .
