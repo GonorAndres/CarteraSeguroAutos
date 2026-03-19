@@ -1,10 +1,16 @@
-name: CI
+name: CI + Deploy
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: us-central1
+  SERVICE: cartera-autos
+  IMAGE: us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/cartera-autos/cartera-autos
 
 jobs:
   test:
@@ -21,12 +27,42 @@ jobs:
       - name: Run tests
         run: Rscript -e 'testthat::test_dir("tests/testthat")'
 
-  docker:
+  deploy:
     needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -t carteras-autos .
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/451451662791/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-deployer@project-ad7a5be2-a1c7-4510-82d.iam.gserviceaccount.com
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ env.IMAGE }}:${{ github.sha }} .
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image ${{ env.IMAGE }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080 \
+            --memory 2Gi \
+            --cpu 2
