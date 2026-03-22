@@ -15,7 +15,8 @@ polizas_test <- tibble(
   tipo_vehiculo = c("Sedan", "SUV", "Hatchback", "Sedan", "SUV",
                      "Sedan", "Hatchback", "SUV", "Sedan", "Hatchback"),
   suma_asegurada = c(200000, 350000, 150000, 400000, 300000,
-                      250000, 120000, 500000, 280000, 180000)
+                      250000, 120000, 500000, 280000, 180000),
+  exposicion = rep(1.0, 10)
 )
 
 siniestros_test <- tibble(
@@ -92,7 +93,8 @@ test_that("calc_kpis devuelve todos los campos necesarios", {
 test_that("calc_kpis valores son coherentes", {
   kpis <- calc_kpis(polizas_test, siniestros_test)
   expect_equal(kpis$loss_ratio, kpis$siniestros_total / kpis$prima_total)
-  expect_equal(kpis$frecuencia, kpis$n_siniestros / kpis$n_polizas)
+  exp_total <- sum(polizas_test$exposicion)
+  expect_equal(kpis$frecuencia, kpis$n_siniestros / exp_total)
   expect_true(kpis$severidad_media > 0)
 })
 

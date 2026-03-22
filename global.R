@@ -42,20 +42,36 @@ APP_DATA <- tryCatch(
     raw$polizas <- enrich_polizas(raw$polizas)
     # Cargar pagos de desarrollo si existe la tabla
     con <- dbConnect(SQLite(), "data/siniestralidad.db")
-    on.exit(dbDisconnect(con), add = TRUE)
     if ("pagos_desarrollo" %in% dbListTables(con)) {
       raw$pagos <- dbGetQuery(con, "SELECT * FROM pagos_desarrollo") %>%
         as_tibble()
     } else {
       raw$pagos <- tibble()
     }
+    dbDisconnect(con)
     raw
   },
   error = function(e) {
     message("Error cargando datos: ", e$message)
     list(
-      polizas = tibble(),
-      siniestros = tibble(),
+      polizas = tibble(
+        poliza_id = integer(), fecha_inicio = as.Date(character()),
+        fecha_vencimiento = as.Date(character()), estado = character(),
+        tipo_vehiculo = character(), marca_vehiculo = character(),
+        canal_venta = character(), edad_conductor = integer(),
+        genero = character(), score_crediticio = numeric(),
+        suma_asegurada = numeric(), prima_neta = numeric(),
+        exposicion = numeric(), anio_suscripcion = integer(),
+        rango_edad = character(), segmento_edad = character(),
+        segmento_score = character(), zona_riesgo = character()
+      ),
+      siniestros = tibble(
+        siniestro_id = integer(), poliza_id = integer(),
+        fecha_siniestro = as.Date(character()), fecha_reporte = as.Date(character()),
+        tipo_siniestro = character(), monto_siniestro = numeric(),
+        monto_pagado = numeric(), estado_siniestro = character(),
+        deducible = numeric()
+      ),
       pagos = tibble()
     )
   }

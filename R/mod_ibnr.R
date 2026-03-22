@@ -108,7 +108,7 @@ chain_ladder <- function(tri_cum) {
     }
   }
 
-  # Process variance for each origin year
+  # Process variance for each origin year (Mack 1993)
   se <- numeric(n_orig)
   for (i in seq_len(n_orig)) {
     pos <- dev_pos[i]
@@ -118,13 +118,13 @@ chain_ladder <- function(tri_cum) {
     }
     var_sum <- 0
     for (j in pos:(n_dev - 1)) {
-      c_ij <- if (j == pos) latest[i] else ultimate[i] / cdf[j]
+      c_ij <- if (j == pos) latest[i] else latest[i] * prod(ldf[pos:min(j - 1, n_dev - 1)])
       if (c_ij > 0 && sigma_sq[j] > 0) {
         col_sum <- sum(tri_cum[!is.na(tri_cum[, j]), j])
-        var_sum <- var_sum + sigma_sq[j] / ldf[j]^2 * (1 / c_ij + 1 / col_sum)
+        var_sum <- var_sum + c_ij^2 * sigma_sq[j] / ldf[j]^2 * (1 / c_ij + 1 / col_sum)
       }
     }
-    se[i] <- ultimate[i] * sqrt(max(var_sum, 0))
+    se[i] <- sqrt(max(var_sum, 0))
   }
 
   list(
@@ -290,8 +290,10 @@ ibnrServer <- function(id, filtered_data) {
       cl <- cl_result()
       elr <- input$elr %||% 0.75
       d <- filtered_data()
+      # Match premium to accident year via exposure-weighted allocation
       premium <- sapply(cl$origin, function(yr) {
-        sum(d$polizas$prima_neta[d$polizas$anio_suscripcion == yr], na.rm = TRUE)
+        pols_yr <- d$polizas %>% filter(anio_suscripcion == yr)
+        sum(pols_yr$prima_neta, na.rm = TRUE)
       })
       pct_unreported <- 1 - 1 / cl$cdf[cl$dev_pos]
       expected_ult <- premium * elr

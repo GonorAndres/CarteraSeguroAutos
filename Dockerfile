@@ -1,9 +1,14 @@
 FROM rocker/shiny-verse:4.3.3
 
-# System dependencies for sf/leaflet
+# System dependencies (must match CI for consistent builds)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcurl4-openssl-dev libssl-dev libxml2-dev \
+    libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+    libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
     libgdal-dev libgeos-dev libproj-dev libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m shinyuser
 
 WORKDIR /srv/shiny-server/app
 
@@ -11,11 +16,13 @@ WORKDIR /srv/shiny-server/app
 COPY renv.lock renv.lock
 COPY renv/activate.R renv/activate.R
 COPY .Rprofile .Rprofile
-RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)" \
-    && R -e "install.packages('shinyWidgets', repos = 'https://cloud.r-project.org')"
+RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
 
 # Copy application
 COPY . .
+RUN chown -R shinyuser:shinyuser /srv/shiny-server/app
+
+USER shinyuser
 
 ENV PORT=8080
 EXPOSE 8080

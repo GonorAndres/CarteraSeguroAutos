@@ -20,12 +20,19 @@ test_that("SQLite database has all tables", {
   expect_true("pagos_desarrollo" %in% tables)
 })
 
-# Load data for remaining tests
-con <- dbConnect(SQLite(), here::here("data/siniestralidad.db"))
-polizas <- dbGetQuery(con, "SELECT * FROM polizas") %>% as_tibble()
-siniestros <- dbGetQuery(con, "SELECT * FROM siniestros") %>% as_tibble()
-pagos <- dbGetQuery(con, "SELECT * FROM pagos_desarrollo") %>% as_tibble()
-dbDisconnect(con)
+# Load data for remaining tests (inside a tryCatch to avoid crashing the runner)
+db_path <- here::here("data/siniestralidad.db")
+if (file.exists(db_path)) {
+  con <- dbConnect(SQLite(), db_path)
+  polizas <- dbGetQuery(con, "SELECT * FROM polizas") %>% as_tibble()
+  siniestros <- dbGetQuery(con, "SELECT * FROM siniestros") %>% as_tibble()
+  pagos <- dbGetQuery(con, "SELECT * FROM pagos_desarrollo") %>% as_tibble()
+  dbDisconnect(con)
+} else {
+  polizas <- tibble()
+  siniestros <- tibble()
+  pagos <- tibble()
+}
 
 # --- Polizas validation ---
 test_that("polizas has expected volume (>50K)", {

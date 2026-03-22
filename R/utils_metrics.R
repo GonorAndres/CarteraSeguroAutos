@@ -71,7 +71,11 @@ calc_frequency <- function(polizas, siniestros, ...) {
 
     pol_agg <- polizas %>%
       group_by(!!!group_vars) %>%
-      summarise(n_polizas = n(), .groups = "drop")
+      summarise(
+        n_polizas = n(),
+        exposicion_total = sum(exposicion, na.rm = TRUE),
+        .groups = "drop"
+      )
 
     sin_agg <- siniestros %>%
       left_join(
@@ -85,13 +89,15 @@ calc_frequency <- function(polizas, siniestros, ...) {
       left_join(sin_agg, by = group_names) %>%
       mutate(
         n_siniestros = replace_na(n_siniestros, 0L),
-        frecuencia = ifelse(n_polizas > 0, n_siniestros / n_polizas, NA_real_)
+        frecuencia = ifelse(exposicion_total > 0, n_siniestros / exposicion_total, NA_real_)
       )
   } else {
+    exposicion_total <- sum(polizas$exposicion, na.rm = TRUE)
     result <- tibble(
       n_polizas = nrow(polizas),
       n_siniestros = nrow(siniestros),
-      frecuencia = nrow(siniestros) / nrow(polizas)
+      exposicion_total = exposicion_total,
+      frecuencia = ifelse(exposicion_total > 0, nrow(siniestros) / exposicion_total, NA_real_)
     )
   }
 
@@ -138,7 +144,10 @@ calc_kpis <- function(polizas, siniestros) {
     prima_total = prima_total,
     siniestros_total = siniestros_total,
     loss_ratio = ifelse(prima_total > 0, siniestros_total / prima_total, NA_real_),
-    frecuencia = nrow(siniestros) / nrow(polizas),
+    frecuencia = {
+      exp_total <- sum(polizas$exposicion, na.rm = TRUE)
+      ifelse(exp_total > 0, nrow(siniestros) / exp_total, NA_real_)
+    },
     severidad_media = mean(siniestros$monto_siniestro, na.rm = TRUE),
     severidad_mediana = median(siniestros$monto_siniestro, na.rm = TRUE),
     suma_asegurada_total = sum(polizas$suma_asegurada, na.rm = TRUE)

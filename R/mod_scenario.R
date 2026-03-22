@@ -100,10 +100,11 @@ scenarioServer <- function(id, filtered_data) {
         shape <- mu^2 / v
         scale <- v / mu
 
-        # Lambda: numero esperado de siniestros
+        # Lambda: numero esperado anual de siniestros
         n_polizas <- nrow(d$polizas)
         n_claims <- length(montos)
-        lambda <- n_claims  # total esperado de reclamos en el periodo
+        n_years <- max(1, length(unique(year(d$siniestros$fecha_siniestro))))
+        lambda <- n_claims / n_years  # expected annual claim count
 
         list(
           shape  = shape,

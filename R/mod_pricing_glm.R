@@ -412,9 +412,12 @@ pricingGlmServer <- function(id, filtered_data) {
     output$avg_pure_premium <- renderText({
       req(freq_model(), sev_model())
       df_freq <- modeling_data()$freq
-      pred_freq <- predict(freq_model(), type = "response")
+      # Predicted annual claim rate per policy (response / exposure)
+      pred_freq_rate <- predict(freq_model(), type = "response") / df_freq$exposicion
       pred_sev  <- mean(predict(sev_model(), type = "response"))
-      avg_pp <- mean(pred_freq) * pred_sev
+      # Pure premium = aggregate frequency rate * average severity
+      avg_freq_rate <- sum(predict(freq_model(), type = "response")) / sum(df_freq$exposicion)
+      avg_pp <- avg_freq_rate * pred_sev
       format_currency_mxn(avg_pp)
     })
 

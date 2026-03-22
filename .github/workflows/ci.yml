@@ -29,9 +29,6 @@ jobs:
 
       - uses: r-lib/actions/setup-renv@v2
 
-      - name: Install test dependencies
-        run: Rscript -e 'install.packages(c("testthat", "here"), repos = "https://cloud.r-project.org")'
-
       - name: Run tests
         run: Rscript -e 'testthat::test_dir("tests/testthat")'
 

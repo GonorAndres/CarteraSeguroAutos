@@ -69,21 +69,25 @@ trend_icon <- function(delta, invert = FALSE) {
 
 #' Formato moneda MXN
 format_currency_mxn <- function(x, digits = 0) {
+  if (is.na(x) || is.infinite(x)) return("--")
   paste0("$", format(round(x, digits), big.mark = ",", scientific = FALSE))
 }
 
 #' Formato moneda MXN en millones
 format_currency_millions <- function(x) {
+  if (is.na(x) || is.infinite(x)) return("--")
   paste0("$", format(round(x / 1e6, 1), big.mark = ","), "M")
 }
 
 #' Formato porcentaje
 format_pct <- function(x, digits = 2) {
+  if (is.na(x) || is.infinite(x)) return("--")
   sprintf(paste0("%.", digits, "f%%"), x * 100)
 }
 
 #' Formato numero con separador de miles
 format_num <- function(x) {
+  if (is.na(x) || is.infinite(x)) return("--")
   format(x, big.mark = ",", scientific = FALSE)
 }
 

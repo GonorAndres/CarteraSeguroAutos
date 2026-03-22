@@ -70,14 +70,18 @@ temporalServer <- function(id, filtered_data) {
     output$plot_tipo_mes <- renderPlotly({
       d <- filtered_data()
       tipo_mes <- d$siniestros %>%
-        mutate(mes = month(fecha_siniestro)) %>%
-        count(mes, tipo_siniestro, name = "n")
+        mutate(
+          anio = year(fecha_siniestro),
+          mes = month(fecha_siniestro),
+          periodo = paste0(anio, "-", sprintf("%02d", mes))
+        ) %>%
+        count(periodo, tipo_siniestro, name = "n")
 
-      plot_ly(tipo_mes, x = ~mes, y = ~n, color = ~tipo_siniestro,
+      plot_ly(tipo_mes, x = ~periodo, y = ~n, color = ~tipo_siniestro,
               colors = PALETTE_CATEGORICAL,
               type = "bar") %>%
-        plotly_default_layout(xlab = "Mes", ylab = "Siniestros") %>%
-        layout(barmode = "stack", xaxis = list(dtick = 1)) %>%
+        plotly_default_layout(xlab = "Periodo", ylab = "Siniestros") %>%
+        layout(barmode = "stack", xaxis = list(tickangle = -45)) %>%
         plotly_clean()
     })
 

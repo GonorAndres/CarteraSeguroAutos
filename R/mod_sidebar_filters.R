@@ -109,6 +109,7 @@ sidebarFiltersServer <- function(id, all_data) {
     output$filter_badge <- renderUI({
       n_filtered <- nrow(filtered()$polizas)
       n_total <- nrow(all_data$polizas)
+      if (n_total == 0) return(tags$p(class = "text-muted small text-center", "Sin datos"))
       pct <- round(n_filtered / n_total * 100)
       tags$div(
         class = "text-muted small text-center",

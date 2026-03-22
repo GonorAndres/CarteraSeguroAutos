@@ -81,6 +81,7 @@ resumenServer <- function(id, filtered_data) {
 
     output$plot_dist_tipo <- renderPlotly({
       d <- filtered_data()
+      validate(need(nrow(d$siniestros) > 0, "Sin siniestros para mostrar."))
       dist <- d$siniestros %>%
         count(tipo_siniestro, name = "n")
 

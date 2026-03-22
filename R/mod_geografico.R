@@ -68,8 +68,15 @@ geograficoServer <- function(id, filtered_data) {
         tryCatch({
           mexico_sf <- rnaturalearth::ne_states(country = "mexico", returnclass = "sf")
           name_map <- c(
-            "Estado de Mexico" = "México", "Ciudad de Mexico" = "Distrito Federal",
-            "Nuevo Leon" = "Nuevo León", "Michoacan" = "Michoacán"
+            "Ciudad de Mexico" = "Distrito Federal",
+            "Estado de Mexico" = "México",
+            "Nuevo Leon" = "Nuevo León",
+            "Michoacan" = "Michoacán",
+            "Queretaro" = "Querétaro",
+            "Yucatan" = "Yucatán",
+            "San Luis Potosi" = "San Luis Potosí",
+            "Coahuila" = "Coahuila de Zaragoza",
+            "Veracruz" = "Veracruz de Ignacio de la Llave"
           )
           stats <- estado_stats()
           stats$name_sf <- ifelse(stats$estado %in% names(name_map),
