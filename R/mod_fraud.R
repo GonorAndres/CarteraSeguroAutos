@@ -96,19 +96,24 @@ fraudServer <- function(id, filtered_data) {
         df <- df %>%
           group_by(tipo_siniestro) %>%
           mutate(
-            mahal_dist = tryCatch({
-              if (n() < 10) return(rep(NA_real_, n()))
-              cols <- cbind(monto_siniestro, dias_reporte, deducible)
-              mu <- colMeans(cols, na.rm = TRUE)
-              sigma <- cov(cols, use = "pairwise.complete.obs")
-              # Regularizar si la matriz es singular
-              if (det(sigma) < 1e-10) {
-                sigma <- sigma + diag(1e-6, ncol(sigma))
+            mahal_dist = {
+              nn <- n()
+              if (nn < 10) {
+                rep(NA_real_, nn)
+              } else {
+                tryCatch({
+                  cols <- cbind(monto_siniestro, dias_reporte, deducible)
+                  mu <- colMeans(cols, na.rm = TRUE)
+                  sigma <- cov(cols, use = "pairwise.complete.obs")
+                  if (det(sigma) < 1e-10) {
+                    sigma <- sigma + diag(1e-6, ncol(sigma))
+                  }
+                  mahalanobis(cols, center = mu, cov = sigma)
+                }, error = function(e) {
+                  rep(NA_real_, nn)
+                })
               }
-              mahalanobis(cols, center = mu, cov = sigma)
-            }, error = function(e) {
-              rep(0, n())
-            })
+            }
           ) %>%
           ungroup()
 
