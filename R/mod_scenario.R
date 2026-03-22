@@ -90,7 +90,8 @@ scenarioServer <- function(id, filtered_data) {
         d <- filtered_data()
         req(nrow(d$siniestros) > 2)
 
-        montos <- d$siniestros$monto_siniestro
+        paid <- d$siniestros %>% filter(estado_siniestro == "Pagado")
+        montos <- paid$monto_siniestro
         montos <- montos[!is.na(montos) & montos > 0]
         req(length(montos) > 2)
 

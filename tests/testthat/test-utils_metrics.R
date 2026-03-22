@@ -111,3 +111,46 @@ test_that("calc_kpis_delta calcula cambios correctamente", {
   expect_equal(deltas$delta_n_polizas, 0.10)
   expect_true(!is.na(deltas$delta_loss_ratio))
 })
+
+# --- Edge cases: empty data ---
+test_that("calc_loss_ratio handles empty siniestros", {
+  result <- calc_loss_ratio(polizas_test, tibble(
+    siniestro_id = integer(), poliza_id = integer(),
+    monto_pagado = numeric(), monto_siniestro = numeric()
+  ))
+  expect_equal(result$n_siniestros, 0)
+  expect_equal(result$siniestros_total, 0)
+  expect_equal(result$loss_ratio, 0)
+})
+
+test_that("calc_frequency handles empty siniestros", {
+  result <- calc_frequency(polizas_test, tibble(
+    siniestro_id = integer(), poliza_id = integer()
+  ))
+  expect_equal(result$n_siniestros, 0)
+  expect_equal(result$frecuencia, 0)
+})
+
+test_that("calc_kpis_delta handles zero denominator", {
+  kpis_zero <- list(n_polizas = 0, n_siniestros = 0, prima_total = 0,
+                    siniestros_total = 0, loss_ratio = 0, frecuencia = 0,
+                    severidad_media = 0)
+  kpis_curr <- list(n_polizas = 100, n_siniestros = 10, prima_total = 500000,
+                    siniestros_total = 350000, loss_ratio = 0.70, frecuencia = 0.10,
+                    severidad_media = 35000)
+  deltas <- calc_kpis_delta(kpis_curr, kpis_zero)
+  expect_true(is.na(deltas$delta_n_polizas))
+})
+
+test_that("calc_frequency uses exposure-adjusted denominator", {
+  polizas_partial <- tibble(
+    poliza_id = 1:4, exposicion = c(1.0, 0.5, 0.25, 1.0),
+    prima_neta = rep(5000, 4)
+  )
+  siniestros_2 <- tibble(
+    siniestro_id = 1:2, poliza_id = c(1, 2)
+  )
+  result <- calc_frequency(polizas_partial, siniestros_2)
+  # 2 claims / 2.75 exposure-years = 0.7273
+  expect_equal(result$frecuencia, 2 / 2.75, tolerance = 1e-4)
+})

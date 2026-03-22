@@ -111,6 +111,14 @@ filter_data <- function(data, filters) {
 #' @return named list con valores unicos por dimension
 get_filter_choices <- function(data) {
   p <- data$polizas
+  if (nrow(p) == 0) {
+    return(list(
+      estados = character(0), tipos_vehiculo = character(0),
+      canales = character(0), anios = integer(0),
+      edad_min = 18L, edad_max = 75L,
+      fecha_min = Sys.Date() - 365, fecha_max = Sys.Date()
+    ))
+  }
   list(
     estados = sort(unique(p$estado)),
     tipos_vehiculo = sort(unique(p$tipo_vehiculo)),

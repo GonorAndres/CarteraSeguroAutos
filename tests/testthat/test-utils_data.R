@@ -102,3 +102,15 @@ test_that("get_filter_choices returns all expected keys", {
   expect_true(length(choices$estados) > 0)
   expect_true(choices$edad_min >= 18)
 })
+
+test_that("get_filter_choices handles empty polizas safely", {
+  empty_data <- list(polizas = tibble(
+    estado = character(), tipo_vehiculo = character(),
+    canal_venta = character(), anio_suscripcion = integer(),
+    edad_conductor = integer(), fecha_inicio = as.Date(character())
+  ))
+  choices <- get_filter_choices(empty_data)
+  expect_equal(length(choices$estados), 0)
+  expect_equal(choices$edad_min, 18L)
+  expect_equal(choices$edad_max, 75L)
+})

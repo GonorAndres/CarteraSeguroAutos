@@ -59,7 +59,7 @@ geograficoServer <- function(id, filtered_data) {
       lr %>%
         left_join(fr %>% select(estado, frecuencia), by = "estado") %>%
         left_join(sv, by = "estado") %>%
-        mutate(severidad_media = replace_na(severidad_media, 0))
+        mutate(severidad_media = severidad_media)  # keep NA for states with no claims
     })
 
     # Leaflet map (when available)

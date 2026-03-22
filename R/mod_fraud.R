@@ -97,6 +97,7 @@ fraudServer <- function(id, filtered_data) {
           group_by(tipo_siniestro) %>%
           mutate(
             mahal_dist = tryCatch({
+              if (n() < 10) return(rep(NA_real_, n()))
               cols <- cbind(monto_siniestro, dias_reporte, deducible)
               mu <- colMeans(cols, na.rm = TRUE)
               sigma <- cov(cols, use = "pairwise.complete.obs")
@@ -173,7 +174,8 @@ fraudServer <- function(id, filtered_data) {
         df <- df %>%
           mutate(
             flag_sum_insured = !is.na(suma_asegurada) & suma_asegurada > 0 &
-              monto_siniestro > 0.90 * suma_asegurada
+              monto_siniestro > 0.90 * suma_asegurada &
+              tipo_siniestro != "Robo Total"
           )
 
         # ================================================================

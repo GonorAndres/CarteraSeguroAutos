@@ -50,3 +50,26 @@ test_that("KPI_TARGETS has expected structure", {
   expect_true("bueno" %in% names(KPI_TARGETS$loss_ratio))
   expect_true("alerta" %in% names(KPI_TARGETS$loss_ratio))
 })
+
+# --- Edge cases: NA/NaN/Inf ---
+test_that("format_currency_mxn handles NA and Inf", {
+  expect_equal(format_currency_mxn(NA), "--")
+  expect_equal(format_currency_mxn(Inf), "--")
+  expect_equal(format_currency_mxn(NaN), "--")
+})
+
+test_that("format_currency_millions handles NA and Inf", {
+  expect_equal(format_currency_millions(NA), "--")
+  expect_equal(format_currency_millions(Inf), "--")
+})
+
+test_that("format_pct handles NA and Inf", {
+  expect_equal(format_pct(NA), "--")
+  expect_equal(format_pct(Inf), "--")
+  expect_equal(format_pct(NaN), "--")
+})
+
+test_that("format_num handles NA and Inf", {
+  expect_equal(format_num(NA), "--")
+  expect_equal(format_num(Inf), "--")
+})

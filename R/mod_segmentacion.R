@@ -77,7 +77,7 @@ segmentacionServer <- function(id, filtered_data) {
 
       plot_ly(z = vals, x = cols, y = rows, type = "heatmap",
               colorscale = list(c(0, PALETTE$success), c(0.5, PALETTE$accent), c(1, PALETTE$danger)),
-              text = apply(vals, c(1, 2), function(v) format_pct(v)),
+              text = apply(vals, c(1, 2), function(v) if (is.na(v)) "N/D" else format_pct(v)),
               hoverinfo = "text",
               showscale = TRUE) %>%
         plotly_default_layout(xlab = "Tipo Vehiculo", ylab = "Segmento Edad") %>%

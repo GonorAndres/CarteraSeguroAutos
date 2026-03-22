@@ -71,7 +71,8 @@ severidadServer <- function(id, filtered_data) {
     output$plot_vehiculo <- renderPlotly({
       d <- filtered_data()
       sin_veh <- d$siniestros %>%
-        left_join(d$polizas %>% select(poliza_id, tipo_vehiculo), by = "poliza_id")
+        left_join(d$polizas %>% select(poliza_id, tipo_vehiculo), by = "poliza_id") %>%
+        filter(!is.na(tipo_vehiculo))
       s <- calc_severity(sin_veh, tipo_vehiculo) %>%
         arrange(desc(severidad_media))
       plot_ly(s, y = ~reorder(tipo_vehiculo, severidad_media),

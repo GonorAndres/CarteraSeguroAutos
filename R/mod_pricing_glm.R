@@ -251,9 +251,9 @@ pricingGlmServer <- function(id, filtered_data) {
           as.factor
         ))
 
-      # -- Severity dataset: one row per claim with positive amount --------
+      # -- Severity dataset: paid claims only with positive amount ----------
       sev_df <- siniestros %>%
-        filter(monto_siniestro > 0) %>%
+        filter(estado_siniestro == "Pagado", monto_siniestro > 0) %>%
         left_join(
           polizas %>%
             select(poliza_id, tipo_vehiculo, rango_edad, zona_riesgo),
@@ -678,7 +678,7 @@ pricingGlmServer <- function(id, filtered_data) {
       steps[["Carga Comercial (40%)"]] <- list(multiplier = 1.40, increment = loading_increment)
 
       # Portfolio averages for comparison
-      port_freq <- mean(modeling_data()$freq$n_claims / modeling_data()$freq$exposicion)
+      port_freq <- sum(modeling_data()$freq$n_claims) / sum(modeling_data()$freq$exposicion)
       port_sev  <- mean(modeling_data()$sev$monto_siniestro)
       port_pp   <- port_freq * port_sev
 

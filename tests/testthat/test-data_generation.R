@@ -119,3 +119,31 @@ test_that("pagos monto_acumulado is non-decreasing within each siniestro", {
     ungroup()
   expect_true(all(check$is_increasing))
 })
+
+# --- Data integrity: claim cap ---
+test_that("no monto_siniestro exceeds suma_asegurada", {
+  sin_with_sa <- siniestros %>%
+    inner_join(polizas %>% select(poliza_id, suma_asegurada), by = "poliza_id")
+  violations <- sin_with_sa %>% filter(monto_siniestro > suma_asegurada)
+  expect_equal(nrow(violations), 0,
+               info = paste("Found", nrow(violations), "claims exceeding suma_asegurada"))
+})
+
+# --- Data integrity: premium is non-negative ---
+test_that("prima_neta is non-negative for all policies", {
+  expect_true(all(polizas$prima_neta >= 0, na.rm = TRUE),
+              info = "Found policies with negative prima_neta")
+  pct_positive <- mean(polizas$prima_neta > 0, na.rm = TRUE)
+  expect_true(pct_positive > 0.99,
+              info = paste("% positive:", round(pct_positive * 100, 2)))
+})
+
+# --- Data integrity: rejection rates are realistic ---
+test_that("rejection rate for mature years is under 10%", {
+  mature <- siniestros %>% filter(anio_ocurrencia <= 2022)
+  if (nrow(mature) > 0) {
+    reject_pct <- mean(mature$estado_siniestro == "Rechazado")
+    expect_true(reject_pct < 0.10,
+                info = paste("Rejection rate:", round(reject_pct * 100, 1), "%"))
+  }
+})

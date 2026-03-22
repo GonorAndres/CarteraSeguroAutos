@@ -44,20 +44,23 @@ datosUI <- function(id) {
               tags$table(class = "table table-sm table-borderless mb-0",
                 tags$tbody(
                   tags$tr(tags$td(class = "text-muted", "Periodo:"), tags$td(tags$strong("2020 - 2024 (5 anos)"))),
-                  tags$tr(tags$td(class = "text-muted", "Polizas:"), tags$td(tags$strong("140,385 (12K nuevas/ano + renovaciones)"))),
-                  tags$tr(tags$td(class = "text-muted", "Siniestros:"), tags$td(tags$strong("11,762"))),
-                  tags$tr(tags$td(class = "text-muted", "Pagos desarrollo:"), tags$td(tags$strong("24,900 (dev 0-4)"))),
-                  tags$tr(tags$td(class = "text-muted", "Estados:"), tags$td("13 entidades federativas")),
-                  tags$tr(tags$td(class = "text-muted", "Vehiculos:"), tags$td("18 modelos, 10 marcas, 3 tipos")),
-                  tags$tr(tags$td(class = "text-muted", "Canales:"), tags$td("Agente/Directo/Banco/Digital"))
+                  tags$tr(tags$td(class = "text-muted", "Polizas:"), tags$td(tags$strong(format(nrow(APP_DATA$polizas), big.mark = ",")))),
+                  tags$tr(tags$td(class = "text-muted", "Siniestros:"), tags$td(tags$strong(format(nrow(APP_DATA$siniestros), big.mark = ",")))),
+                  tags$tr(tags$td(class = "text-muted", "Pagos desarrollo:"), tags$td(tags$strong(format(nrow(APP_DATA$pagos), big.mark = ",")))),
+                  tags$tr(tags$td(class = "text-muted", "Estados:"), tags$td(paste(length(unique(APP_DATA$polizas$estado)), "entidades federativas"))),
+                  tags$tr(tags$td(class = "text-muted", "Vehiculos:"), tags$td(paste(length(unique(APP_DATA$polizas$modelo_vehiculo)), "modelos,", length(unique(APP_DATA$polizas$marca_vehiculo)), "marcas"))),
+                  tags$tr(tags$td(class = "text-muted", "Canales:"), tags$td(paste(sort(unique(APP_DATA$polizas$canal_venta)), collapse = "/")))
                 )
               ),
               tags$hr(class = "my-1"),
-              tags$div(class = "d-flex justify-content-between small",
-                tags$span("LR objetivo: ", tags$strong("75%"), " (logrado: 71.1%)"),
-                tags$span("Freq: ", tags$strong("8.5%"), " (8.4%)"),
-                tags$span("Sev: ", tags$strong("$24K"), " ($29.4K)")
-              )
+              tags$div(class = "d-flex justify-content-between small", {
+                kpis <- calc_kpis(APP_DATA$polizas, APP_DATA$siniestros)
+                tagList(
+                  tags$span("LR objetivo: ", tags$strong("75%"), paste0(" (logrado: ", format_pct(kpis$loss_ratio), ")")),
+                  tags$span("Freq: ", tags$strong("8.5%"), paste0(" (", format_pct(kpis$frecuencia), ")")),
+                  tags$span("Sev: ", tags$strong("$24K"), paste0(" (", format_currency_mxn(kpis$severidad_media), ")"))
+                )
+              })
             )
           )
         ),
