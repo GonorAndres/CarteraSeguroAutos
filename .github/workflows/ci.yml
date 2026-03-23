@@ -70,4 +70,6 @@ jobs:
             --allow-unauthenticated \
             --port 8080 \
             --memory 2Gi \
-            --cpu 2
+            --cpu 2 \
+            --startup-cpu-boost \
+            --timeout 600
