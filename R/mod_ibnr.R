@@ -148,11 +148,11 @@ ibnrUI <- function(id) {
     full_screen = TRUE,
 
     nav_panel(
-      title = "Triangulo de Desarrollo", icon = icon("table"),
+      title = "Tri\u00e1ngulo de Desarrollo", icon = icon("table"),
       card(
         card_header(
           class = "d-flex justify-content-between align-items-center",
-          tags$span("Triangulo de Pagos"),
+          tags$span("Tri\u00e1ngulo de Pagos"),
           radioButtons(ns("tri_tipo"), NULL,
                        choices = c("Acumulado" = "cumulative", "Incremental" = "incremental"),
                        selected = "cumulative", inline = TRUE)
@@ -168,7 +168,7 @@ ibnrUI <- function(id) {
     ),
 
     nav_panel(
-      title = "Estimacion IBNR", icon = icon("calculator"),
+      title = "Estimaci\u00f3n IBNR", icon = icon("calculator"),
       layout_columns(
         col_widths = breakpoints(sm = 12, md = 4),
         value_box(title = "IBNR Total (Chain Ladder)", value = textOutput(ns("vb_ibnr_cl")),
@@ -190,10 +190,10 @@ ibnrUI <- function(id) {
     ),
 
     nav_panel(
-      title = "Diagnosticos", icon = icon("chart-line"),
+      title = "Diagn\u00f3sticos", icon = icon("chart-line"),
       layout_columns(
         col_widths = breakpoints(sm = 12, md = 6),
-        card(card_header("IBNR y Errores Estandar por Año"),
+        card(card_header("IBNR y Errores Est\u00e1ndar por A\u00f1o"),
              plotlyOutput(ns("plot_se"), height = "400px")),
         card(card_header("Factores de Desarrollo por Periodo"),
              plotlyOutput(ns("plot_ldf"), height = "400px"))
@@ -365,7 +365,7 @@ ibnrServer <- function(id, filtered_data) {
       plot_ly(df, x = ~dev, y = ~ldf, type = "bar",
               marker = list(color = PALETTE$accent),
               text = ~sprintf("%.4f", ldf), textposition = "outside") %>%
-        plotly_default_layout(xlab = "Periodo de Desarrollo", ylab = "Link Ratio") %>%
+        plotly_default_layout(xlab = "Per\u00edodo de Desarrollo", ylab = "Link Ratio") %>%
         layout(yaxis = list(range = c(0.9, max(cl$ldf) * 1.1)))
     })
   })

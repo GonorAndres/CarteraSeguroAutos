@@ -134,7 +134,7 @@ plotly_bar <- function(data, x, y, color = PALETTE$primary,
 # --- Column label lookup for DT tables ---
 COLUMN_LABELS <- c(
   canal_venta = "Canal de Venta",
-  tipo_vehiculo = "Tipo Vehiculo",
+  tipo_vehiculo = "Tipo Veh\u00edculo",
   marca_vehiculo = "Marca",
   modelo_vehiculo = "Modelo",
   n_polizas = "Polizas",
@@ -149,11 +149,11 @@ COLUMN_LABELS <- c(
   tipo_siniestro = "Tipo Siniestro",
   severidad_media = "Severidad Media",
   severidad_mediana = "Severidad Mediana",
-  severidad_sd = "Desv. Estandar",
-  severidad_min = "Minimo",
-  severidad_max = "Maximo",
+  severidad_sd = "Desv. Est\u00e1ndar",
+  severidad_min = "M\u00ednimo",
+  severidad_max = "M\u00e1ximo",
   n = "Cantidad",
-  anio_suscripcion = "Anio"
+  anio_suscripcion = "A\u00f1o"
 )
 
 # Human-readable metric labels for geographic module

@@ -5,7 +5,7 @@
 segmentacionUI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Segmentacion de Riesgo"),
+    h3("Segmentaci\u00f3n de Riesgo"),
     layout_columns(
       col_widths = breakpoints(sm = 12, md = 6),
       card(
@@ -18,7 +18,7 @@ segmentacionUI <- function(id) {
       )
     ),
     card(
-      card_header("Matriz de Riesgo: Edad x Tipo Vehiculo"),
+      card_header("Matriz de Riesgo: Edad x Tipo Veh\u00edculo"),
       plotlyOutput(ns("plot_heatmap"), height = "450px")
     ),
     card(
@@ -80,7 +80,7 @@ segmentacionServer <- function(id, filtered_data) {
               text = apply(vals, c(1, 2), function(v) if (is.na(v)) "N/D" else format_pct(v)),
               hoverinfo = "text",
               showscale = TRUE) %>%
-        plotly_default_layout(xlab = "Tipo Vehiculo", ylab = "Segmento Edad") %>%
+        plotly_default_layout(xlab = "Tipo Veh\u00edculo", ylab = "Segmento Edad") %>%
         layout(coloraxis = list(colorbar = list(title = "Loss Ratio"))) %>%
         plotly_clean()
     })

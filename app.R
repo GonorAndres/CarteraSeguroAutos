@@ -25,8 +25,8 @@ ui <- page_navbar(
   nav_panel("Frecuencia",    icon = icon("chart-bar"),      frecuenciaUI("freq")),
   nav_panel("Severidad",     icon = icon("dollar-sign"),    severidadUI("sev")),
   nav_panel("Temporal",      icon = icon("calendar"),       temporalUI("temp")),
-  nav_panel("Geografico",    icon = icon("map"),            geograficoUI("geo")),
-  nav_panel("Segmentacion",  icon = icon("users"),          segmentacionUI("seg")),
+  nav_panel("Geogr\u00e1fico",    icon = icon("map"),            geograficoUI("geo")),
+  nav_panel("Segmentaci\u00f3n",  icon = icon("users"),          segmentacionUI("seg")),
 
   # --- Modulos actuariales avanzados ---
   nav_menu(

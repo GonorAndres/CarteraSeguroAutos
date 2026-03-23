@@ -55,7 +55,7 @@ pricingGlmUI <- function(id) {
         )
       ),
       card(
-        card_header("Comparacion de Modelos"),
+        card_header("Comparaci\u00f3n de Modelos"),
         DTOutput(ns("tbl_model_comparison"))
       )
     ),
@@ -96,11 +96,11 @@ pricingGlmUI <- function(id) {
             min = 18, max = 75, value = 35, step = 1
           ),
           radioButtons(
-            ns("cot_genero"), "Genero",
+            ns("cot_genero"), "G\u00e9nero",
             choices = c("M", "F"), selected = "M", inline = TRUE
           ),
           selectInput(
-            ns("cot_tipo_vehiculo"), "Tipo de Vehiculo",
+            ns("cot_tipo_vehiculo"), "Tipo de Veh\u00edculo",
             choices = NULL
           ),
           selectInput(
@@ -154,11 +154,11 @@ pricingGlmUI <- function(id) {
             )
           ),
           card(
-            card_header("Descomposicion de la Prima - Waterfall"),
+            card_header("Descomposici\u00f3n de la Prima - Waterfall"),
             plotly::plotlyOutput(ns("plot_waterfall"), height = "480px")
           ),
           card(
-            card_header("Comparacion con Portafolio"),
+            card_header("Comparaci\u00f3n con Portafolio"),
             DTOutput(ns("tbl_cot_comparison"))
           )
         )
@@ -169,7 +169,7 @@ pricingGlmUI <- function(id) {
     # Tab 4: Diagnosticos
     # ------------------------------------------------------------------
     nav_panel(
-      title = "Diagnosticos",
+      title = "Diagn\u00f3sticos",
       icon = icon("stethoscope"),
       layout_columns(
         col_widths = breakpoints(sm = 12, md = 6),
@@ -198,7 +198,7 @@ pricingGlmUI <- function(id) {
         layout_columns(
           col_widths = breakpoints(sm = 12, md = c(4, 8)),
           selectInput(
-            ns("diag_factor"), "Factor de Analisis",
+            ns("diag_factor"), "Factor de An\u00e1lisis",
             choices = c(
               "rango_edad", "genero", "tipo_vehiculo",
               "zona_riesgo", "canal_venta", "segmento_score"
@@ -356,8 +356,8 @@ pricingGlmServer <- function(id, filtered_data) {
           Factor = case_when(
             term == "(Intercept)" ~ "Intercepto",
             grepl("^rango_edad", term)      ~ "Rango Edad",
-            grepl("^genero", term)           ~ "Genero",
-            grepl("^tipo_vehiculo", term)    ~ "Tipo Vehiculo",
+            grepl("^genero", term)           ~ "G\u00e9nero",
+            grepl("^tipo_vehiculo", term)    ~ "Tipo Veh\u00edculo",
             grepl("^zona_riesgo", term)      ~ "Zona Riesgo",
             grepl("^canal_venta", term)      ~ "Canal Venta",
             grepl("^segmento_score", term)   ~ "Segmento Score",
@@ -436,7 +436,7 @@ pricingGlmServer <- function(id, filtered_data) {
           Termino       = term,
           `Exp(Coef)`   = estimate,
           `Error Std`   = std.error,
-          `Estadistico` = statistic,
+          Estadístico = statistic,
           `Valor p`     = p.value,
           `IC Inf`      = conf.low,
           `IC Sup`      = conf.high
@@ -471,7 +471,7 @@ pricingGlmServer <- function(id, filtered_data) {
           Termino       = term,
           `Exp(Coef)`   = estimate,
           `Error Std`   = std.error,
-          `Estadistico` = statistic,
+          Estadístico = statistic,
           `Valor p`     = p.value,
           `IC Inf`      = conf.low,
           `IC Sup`      = conf.high
@@ -622,8 +622,8 @@ pricingGlmServer <- function(id, filtered_data) {
       # For each factor, find the matching coefficient
       factor_map <- list(
         `Rango Edad`      = paste0("rango_edad", rango),
-        `Genero`          = paste0("genero", input$cot_genero),
-        `Tipo Vehiculo`   = paste0("tipo_vehiculo", input$cot_tipo_vehiculo),
+        `Género`          = paste0("genero", input$cot_genero),
+        `Tipo Vehículo`   = paste0("tipo_vehiculo", input$cot_tipo_vehiculo),
         `Zona Riesgo`     = paste0("zona_riesgo", input$cot_zona_riesgo),
         `Canal Venta`     = paste0("canal_venta", input$cot_canal_venta),
         `Segmento Score`  = paste0("segmento_score", input$cot_segmento_score)
@@ -635,7 +635,7 @@ pricingGlmServer <- function(id, filtered_data) {
       intercept_sev <- coefs_sev["(Intercept)"]
 
       sev_factor_map <- list(
-        `Tipo Vehiculo (Sev)` = paste0("tipo_vehiculo", input$cot_tipo_vehiculo),
+        `Tipo Vehículo (Sev)` = paste0("tipo_vehiculo", input$cot_tipo_vehiculo),
         `Rango Edad (Sev)`    = paste0("rango_edad", rango),
         `Zona Riesgo (Sev)`   = paste0("zona_riesgo", input$cot_zona_riesgo)
       )
@@ -765,7 +765,7 @@ pricingGlmServer <- function(id, filtered_data) {
         )
 
       p %>% plotly_default_layout(
-        title = "Descomposicion Multiplicativa de la Prima",
+        title = "Descomposici\u00f3n Multiplicativa de la Prima",
         xlab  = "",
         ylab  = "Prima (MXN)"
       ) %>%
@@ -912,7 +912,7 @@ pricingGlmServer <- function(id, filtered_data) {
 
       p %>% plotly_default_layout(
         title = NULL,
-        xlab  = "Cuantiles Teoricos",
+        xlab  = "Cuantiles Te\u00f3ricos",
         ylab  = "Cuantiles Muestrales"
       )
     })
@@ -948,7 +948,7 @@ pricingGlmServer <- function(id, filtered_data) {
 
       p %>% plotly_default_layout(
         title = NULL,
-        xlab  = "Cuantiles Teoricos",
+        xlab  = "Cuantiles Te\u00f3ricos",
         ylab  = "Cuantiles Muestrales"
       )
     })

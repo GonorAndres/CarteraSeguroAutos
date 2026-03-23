@@ -17,23 +17,23 @@ datosUI <- function(id) {
 
           # Left: source & methodology
           tagList(
-            tags$h5(class = "text-primary mb-2", icon("database"), " Datos Sinteticos - Mercado Mexicano"),
+            tags$h5(class = "text-primary mb-2", icon("database"), " Datos Sint\u00e9ticos - Mercado Mexicano"),
             tags$p(class = "mb-1",
-              "Dataset sintetico generado con distribuciones estadisticas calibradas a parametros del mercado asegurador mexicano.",
+              "Dataset sint\u00e9tico generado con distribuciones estad\u00edsticas calibradas a par\u00e1metros del mercado asegurador mexicano.",
               tags$strong("No contiene datos reales de asegurados.")
             ),
             tags$p(class = "mb-1 text-muted small",
-              tags$strong("Fuentes de calibracion: "),
+              tags$strong("Fuentes de calibraci\u00f3n: "),
               "CONDUSEF (frecuencia de siniestralidad), AMIS (severidad promedio y loss ratio sectorial)."
             ),
             tags$p(class = "mb-0 text-muted small",
               tags$strong("Distribuciones: "),
               "Frecuencia ~ Poisson (lambda=0.085), Severidad ~ Gamma (shape=2, scale=8,000), ",
-              "Inflacion 4% anual, Retencion 82% base, Missing data 6%."
+              "Inflaci\u00f3n 4% anual, Retenci\u00f3n 82% base, Missing data 6%."
             ),
             tags$p(class = "mb-0 text-muted small",
               tags$strong("Tipo siniestro: "),
-              "Colision 65%, Danos 20%, Robo Parcial 10%, Robo Total 4%, Incendio 1%."
+              "Colisi\u00f3n 65%, Da\u00f1os 20%, Robo Parcial 10%, Robo Total 4%, Incendio 1%."
             )
           ),
 
@@ -43,12 +43,12 @@ datosUI <- function(id) {
               tags$h6(class = "mb-2", icon("chart-pie"), " Volumen y KPIs"),
               tags$table(class = "table table-sm table-borderless mb-0",
                 tags$tbody(
-                  tags$tr(tags$td(class = "text-muted", "Periodo:"), tags$td(tags$strong("2020 - 2024 (5 anos)"))),
-                  tags$tr(tags$td(class = "text-muted", "Polizas:"), tags$td(tags$strong(format(nrow(APP_DATA$polizas), big.mark = ",")))),
+                  tags$tr(tags$td(class = "text-muted", "Periodo:"), tags$td(tags$strong("2020 - 2024 (5 a\u00f1os)"))),
+                  tags$tr(tags$td(class = "text-muted", "P\u00f3lizas:"), tags$td(tags$strong(format(nrow(APP_DATA$polizas), big.mark = ",")))),
                   tags$tr(tags$td(class = "text-muted", "Siniestros:"), tags$td(tags$strong(format(nrow(APP_DATA$siniestros), big.mark = ",")))),
                   tags$tr(tags$td(class = "text-muted", "Pagos desarrollo:"), tags$td(tags$strong(format(nrow(APP_DATA$pagos), big.mark = ",")))),
                   tags$tr(tags$td(class = "text-muted", "Estados:"), tags$td(paste(length(unique(APP_DATA$polizas$estado)), "entidades federativas"))),
-                  tags$tr(tags$td(class = "text-muted", "Vehiculos:"), tags$td(paste(length(unique(APP_DATA$polizas$modelo_vehiculo)), "modelos,", length(unique(APP_DATA$polizas$marca_vehiculo)), "marcas"))),
+                  tags$tr(tags$td(class = "text-muted", "Veh\u00edculos:"), tags$td(paste(length(unique(APP_DATA$polizas$modelo_vehiculo)), "modelos,", length(unique(APP_DATA$polizas$marca_vehiculo)), "marcas"))),
                   tags$tr(tags$td(class = "text-muted", "Canales:"), tags$td(paste(sort(unique(APP_DATA$polizas$canal_venta)), collapse = "/")))
                 )
               ),
@@ -73,10 +73,10 @@ datosUI <- function(id) {
             layout_columns(
               col_widths = breakpoints(sm = 12, md = c(4, 4, 4)),
               tags$div(
-                tags$h6("Polizas"),
+                tags$h6("P\u00f3lizas"),
                 tags$ul(class = "list-unstyled mb-0",
-                  tags$li(tags$code("poliza_id"), " - ID unico"),
-                  tags$li(tags$code("anio_suscripcion"), " - Ano de emision (2020-2024)"),
+                  tags$li(tags$code("poliza_id"), " - ID \u00fanico"),
+                  tags$li(tags$code("anio_suscripcion"), " - A\u00f1o de emisi\u00f3n (2020-2024)"),
                   tags$li(tags$code("poliza_status"), " - Vigente/Renovada/No Renovada"),
                   tags$li(tags$code("edad_conductor"), " - Edad (18-75)"),
                   tags$li(tags$code("estado"), " - Entidad federativa"),
@@ -89,9 +89,9 @@ datosUI <- function(id) {
               tags$div(
                 tags$h6("Siniestros"),
                 tags$ul(class = "list-unstyled mb-0",
-                  tags$li(tags$code("siniestro_id"), " - ID unico del siniestro"),
-                  tags$li(tags$code("poliza_id"), " - FK a poliza"),
-                  tags$li(tags$code("tipo_siniestro"), " - Colision/Robo/Danos/Incendio"),
+                  tags$li(tags$code("siniestro_id"), " - ID \u00fanico del siniestro"),
+                  tags$li(tags$code("poliza_id"), " - FK a p\u00f3liza"),
+                  tags$li(tags$code("tipo_siniestro"), " - Colisi\u00f3n/Robo/Da\u00f1os/Incendio"),
                   tags$li(tags$code("monto_siniestro"), " - Monto bruto (MXN)"),
                   tags$li(tags$code("deducible"), " - Deducible aplicado"),
                   tags$li(tags$code("monto_pagado"), " - Monto neto pagado"),
@@ -102,11 +102,11 @@ datosUI <- function(id) {
               tags$div(
                 tags$h6("Pagos Desarrollo"),
                 tags$ul(class = "list-unstyled mb-0",
-                  tags$li(tags$code("anio_ocurrencia"), " - Ano del siniestro"),
-                  tags$li(tags$code("anio_desarrollo"), " - Periodo de desarrollo (0-4)"),
+                  tags$li(tags$code("anio_ocurrencia"), " - A\u00f1o del siniestro"),
+                  tags$li(tags$code("anio_desarrollo"), " - Per\u00edodo de desarrollo (0-4)"),
                   tags$li(tags$code("monto_pago"), " - Pago incremental"),
                   tags$li(tags$code("monto_acumulado"), " - Pago acumulado"),
-                  tags$li("Patron: 60%/85%/95%/99%/100%")
+                  tags$li("Patr\u00f3n: 60%/85%/95%/99%/100%")
                 )
               )
             )
@@ -117,7 +117,7 @@ datosUI <- function(id) {
 
     navset_card_tab(
       nav_panel(
-        "Polizas",
+        "P\u00f3lizas",
         layout_columns(
           col_widths = breakpoints(sm = 12, md = 6),
           downloadButton(ns("dl_polizas_csv"), "Descargar CSV", class = "btn-sm btn-outline-primary mt-2"),

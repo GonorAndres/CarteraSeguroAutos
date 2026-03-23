@@ -5,7 +5,7 @@
 temporalUI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Analisis Temporal"),
+    h3("An\u00e1lisis Temporal"),
     layout_columns(
       col_widths = breakpoints(sm = 12, md = 6),
       card(
@@ -20,11 +20,11 @@ temporalUI <- function(id) {
     layout_columns(
       col_widths = breakpoints(sm = 12, md = 6),
       card(
-        card_header("Composicion por Tipo y Mes"),
+        card_header("Composici\u00f3n por Tipo y Mes"),
         plotlyOutput(ns("plot_tipo_mes"), height = "350px")
       ),
       card(
-        card_header("Dias de Reporte (Lag)"),
+        card_header("D\u00edas de Reporte (Lag)"),
         plotlyOutput(ns("plot_lag"), height = "350px")
       )
     ),
@@ -93,7 +93,7 @@ temporalServer <- function(id, filtered_data) {
       plot_ly(lag_data, x = ~dias_reporte, type = "histogram",
               nbinsx = 16,
               marker = list(color = PALETTE$primary)) %>%
-        plotly_default_layout(xlab = "Dias entre Ocurrencia y Reporte", ylab = "Frecuencia") %>%
+        plotly_default_layout(xlab = "D\u00edas entre Ocurrencia y Reporte", ylab = "Frecuencia") %>%
         plotly_clean()
     })
 

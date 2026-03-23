@@ -5,7 +5,7 @@
 severidadUI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Analisis de Severidad"),
+    h3("An\u00e1lisis de Severidad"),
     layout_columns(
       col_widths = breakpoints(sm = 12, md = 6),
       card(
@@ -13,7 +13,7 @@ severidadUI <- function(id) {
         plotlyOutput(ns("plot_tipo"), height = "350px")
       ),
       card(
-        card_header("Distribucion de Severidad"),
+        card_header("Distribuci\u00f3n de Severidad"),
         plotlyOutput(ns("plot_hist"), height = "350px")
       )
     ),
@@ -24,12 +24,12 @@ severidadUI <- function(id) {
         plotlyOutput(ns("plot_anio"), height = "350px")
       ),
       card(
-        card_header("Severidad por Tipo de Vehiculo"),
+        card_header("Severidad por Tipo de Veh\u00edculo"),
         plotlyOutput(ns("plot_vehiculo"), height = "350px")
       )
     ),
     card(
-      card_header("Estadisticas de Severidad"),
+      card_header("Estad\u00edsticas de Severidad"),
       DTOutput(ns("tabla_sev"))
     )
   )
@@ -88,8 +88,8 @@ severidadServer <- function(id, filtered_data) {
         arrange(desc(severidad_media))
       datatable(humanize_colnames(s), options = list(pageLength = 10, scrollX = TRUE),
                 rownames = FALSE) %>%
-        formatCurrency(c("Severidad Media", "Severidad Mediana", "Desv. Estandar",
-                         "Minimo", "Maximo"),
+        formatCurrency(c("Severidad Media", "Severidad Mediana", "Desv. Est\u00e1ndar",
+                         "M\u00ednimo", "M\u00e1ximo"),
                        currency = "$", digits = 0)
     })
   })

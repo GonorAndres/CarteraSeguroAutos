@@ -5,7 +5,7 @@
 lossRatioUI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Analisis de Loss Ratio"),
+    h3("An\u00e1lisis de Loss Ratio"),
     layout_columns(
       col_widths = breakpoints(sm = 12, md = 6),
       card(
@@ -13,7 +13,7 @@ lossRatioUI <- function(id) {
         plotlyOutput(ns("plot_canal"), height = "350px")
       ),
       card(
-        card_header("Loss Ratio por Tipo de Vehiculo"),
+        card_header("Loss Ratio por Tipo de Veh\u00edculo"),
         plotlyOutput(ns("plot_vehiculo"), height = "350px")
       )
     ),
@@ -24,7 +24,7 @@ lossRatioUI <- function(id) {
         plotlyOutput(ns("plot_marca"), height = "350px")
       ),
       card(
-        card_header("Loss Ratio por Año de Suscripcion"),
+        card_header("Loss Ratio por A\u00f1o de Suscripci\u00f3n"),
         plotlyOutput(ns("plot_anio"), height = "350px")
       )
     ),

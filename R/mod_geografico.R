@@ -9,7 +9,7 @@ HAS_LEAFLET <- requireNamespace("leaflet", quietly = TRUE) &&
 geograficoUI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Analisis Geografico"),
+    h3("An\u00e1lisis Geogr\u00e1fico"),
     layout_columns(
       col_widths = breakpoints(sm = 12, md = c(8, 4)),
       card(

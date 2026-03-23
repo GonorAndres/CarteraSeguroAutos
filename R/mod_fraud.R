@@ -6,7 +6,7 @@
 fraudUI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Deteccion de Fraude y Anomalias"),
+    h3("Detecci\u00f3n de Fraude y Anomal\u00edas"),
 
     # Value boxes
     layout_columns(
@@ -39,17 +39,17 @@ fraudUI <- function(id) {
 
     # Graficos y tabla
     navset_card_tab(
-      title = "Resultados del Analisis",
+      title = "Resultados del An\u00e1lisis",
       nav_panel(
-        "Top Anomalias",
+        "Top Anomal\u00edas",
         DTOutput(ns("table_anomalies"))
       ),
       nav_panel(
-        "Distribucion de Flags",
+        "Distribuci\u00f3n de Flags",
         plotlyOutput(ns("plot_flags"), height = "420px")
       ),
       nav_panel(
-        "Distribucion de Score",
+        "Distribuci\u00f3n de Score",
         plotlyOutput(ns("plot_score_hist"), height = "420px")
       ),
       nav_panel(
@@ -198,7 +198,7 @@ fraudServer <- function(id, filtered_data) {
         df
       }, error = function(e) {
         showNotification(
-          paste("Error en analisis de fraude:", e$message),
+          paste("Error en an\u00e1lisis de fraude:", e$message),
           type = "error"
         )
         tibble()
@@ -290,8 +290,8 @@ fraudServer <- function(id, filtered_data) {
 
       flag_counts <- tibble(
         Flag = c(
-          "Multiple (60 dias)",
-          "Inicio poliza (30 dias)",
+          "M\u00faltiple (60 d\u00edas)",
+          "Inicio p\u00f3liza (30 d\u00edas)",
           "Severidad (>3x med.)",
           "Retraso reporte (>10d)",
           "Suma asegurada (>90%)"
@@ -325,7 +325,7 @@ fraudServer <- function(id, filtered_data) {
       ) %>%
         plotly_default_layout(
           title = "Siniestros por Tipo de Flag",
-          xlab = "Numero de Siniestros",
+          xlab = "N\u00famero de Siniestros",
           ylab = NULL
         )
     })
@@ -352,7 +352,7 @@ fraudServer <- function(id, filtered_data) {
           showlegend = TRUE
         ) %>%
         plotly_default_layout(
-          title = "Distribucion del Score de Fraude",
+          title = "Distribuci\u00f3n del Score de Fraude",
           xlab = "Score de Fraude",
           ylab = "Frecuencia"
         ) %>%

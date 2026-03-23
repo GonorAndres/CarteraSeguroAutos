@@ -5,11 +5,11 @@
 frecuenciaUI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Analisis de Frecuencia"),
+    h3("An\u00e1lisis de Frecuencia"),
     layout_columns(
       col_widths = breakpoints(sm = 12, md = 6),
       card(
-        card_header("Frecuencia por Tipo de Vehiculo"),
+        card_header("Frecuencia por Tipo de Veh\u00edculo"),
         plotlyOutput(ns("plot_vehiculo"), height = "350px")
       ),
       card(
@@ -20,7 +20,7 @@ frecuenciaUI <- function(id) {
     layout_columns(
       col_widths = breakpoints(sm = 12, md = 6),
       card(
-        card_header("Frecuencia por Genero"),
+        card_header("Frecuencia por G\u00e9nero"),
         plotlyOutput(ns("plot_genero"), height = "350px")
       ),
       card(
@@ -66,7 +66,7 @@ frecuenciaServer <- function(id, filtered_data) {
       f <- calc_frequency(d$polizas, d$siniestros, genero)
       plot_ly(f, x = ~genero, y = ~frecuencia, type = "bar",
               marker = list(color = c(PALETTE$primary, PALETTE$secondary))) %>%
-        plotly_default_layout(xlab = "Genero", ylab = "Frecuencia") %>%
+        plotly_default_layout(xlab = "G\u00e9nero", ylab = "Frecuencia") %>%
         layout(yaxis = list(tickformat = ".2%")) %>%
         plotly_clean()
     })

@@ -6,30 +6,30 @@
 scenarioUI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Analisis de Escenarios y Stress Testing"),
+    h3("An\u00e1lisis de Escenarios y Stress Testing"),
 
     layout_columns(
       col_widths = breakpoints(sm = 12, md = c(3, 9)),
 
       # --- Panel de controles ---
       card(
-        card_header("Parametros de Estres"),
+        card_header("Par\u00e1metros de Estr\u00e9s"),
         sliderInput(
-          ns("freq_stress"), "Estres de Frecuencia",
+          ns("freq_stress"), "Estr\u00e9s de Frecuencia",
           min = 0.5, max = 2.0, value = 1.0, step = 0.05
         ),
         sliderInput(
-          ns("sev_stress"), "Estres de Severidad",
+          ns("sev_stress"), "Estr\u00e9s de Severidad",
           min = 0.5, max = 2.0, value = 1.0, step = 0.05
         ),
         hr(),
         radioButtons(
-          ns("n_sim"), "Numero de Simulaciones",
+          ns("n_sim"), "N\u00famero de Simulaciones",
           choices = c("1,000" = 1000, "10,000" = 10000, "50,000" = 50000),
           selected = 10000
         ),
         actionButton(
-          ns("run_sim"), "Ejecutar Simulacion",
+          ns("run_sim"), "Ejecutar Simulaci\u00f3n",
           class = "btn-primary w-100 mt-2",
           icon = icon("play")
         ),
@@ -51,20 +51,20 @@ scenarioUI <- function(id) {
             showcase = icon("triangle-exclamation"), theme = "danger"
           ),
           value_box(
-            title = "Perdida Media", value = textOutput(ns("vb_mean")),
+            title = "P\u00e9rdida Media", value = textOutput(ns("vb_mean")),
             showcase = icon("chart-line"), theme = "primary"
           ),
           value_box(
-            title = "Desviacion Estandar", value = textOutput(ns("vb_sd")),
+            title = "Desviaci\u00f3n Est\u00e1ndar", value = textOutput(ns("vb_sd")),
             showcase = icon("arrows-left-right"), theme = "warning"
           )
         ),
 
         # Graficos
         navset_card_tab(
-          title = "Resultados de Simulacion",
+          title = "Resultados de Simulaci\u00f3n",
           nav_panel(
-            "Densidad de Perdida Agregada",
+            "Densidad de P\u00e9rdida Agregada",
             plotlyOutput(ns("plot_density"), height = "450px")
           ),
           nav_panel(
@@ -214,7 +214,7 @@ scenarioServer <- function(id, filtered_data) {
         )
       }, error = function(e) {
         showNotification(
-          paste("Error en simulacion:", e$message),
+          paste("Error en simulaci\u00f3n:", e$message),
           type = "error"
         )
         NULL
@@ -299,8 +299,8 @@ scenarioServer <- function(id, filtered_data) {
 
       p %>%
         plotly_default_layout(
-          title = "Distribucion de Perdida Agregada",
-          xlab = "Perdida Agregada (MXN)",
+          title = "Distribuci\u00f3n de P\u00e9rdida Agregada",
+          xlab = "P\u00e9rdida Agregada (MXN)",
           ylab = "Densidad"
         ) %>%
         layout(
@@ -341,12 +341,12 @@ scenarioServer <- function(id, filtered_data) {
         ) %>%
         plotly_default_layout(
           title = "Curva de Probabilidad de Excedencia (1 - CDF)",
-          xlab = "Perdida Agregada (MXN)",
-          ylab = "P(Perdida > x)"
+          xlab = "P\u00e9rdida Agregada (MXN)",
+          ylab = "P(P\u00e9rdida > x)"
         ) %>%
         layout(
           yaxis = list(type = "log", tickformat = ".2%",
-                       title = "P(Perdida > x)",
+                       title = "P(P\u00e9rdida > x)",
                        gridcolor = "#E9ECEF", zerolinecolor = "#E9ECEF"),
           legend = list(x = 0.7, y = 0.95)
         )
@@ -367,8 +367,8 @@ scenarioServer <- function(id, filtered_data) {
 
       impact_df <- tibble(
         Metrica = c(
-          "Perdida Media",
-          "Desviacion Estandar",
+          "P\u00e9rdida Media",
+          "Desviaci\u00f3n Est\u00e1ndar",
           "VaR 95%",
           "VaR 99%",
           "VaR 99.5%",

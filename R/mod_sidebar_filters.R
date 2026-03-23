@@ -11,7 +11,7 @@ sidebarFiltersUI <- function(id) {
       language = "es", separator = "a"
     ),
     pickerInput(
-      ns("anio"), "Año de Suscripcion",
+      ns("anio"), "A\u00f1o de Suscripci\u00f3n",
       choices = NULL, multiple = TRUE,
       options = pickerOptions(
         actionsBox = TRUE, liveSearch = FALSE,
@@ -27,7 +27,7 @@ sidebarFiltersUI <- function(id) {
       )
     ),
     pickerInput(
-      ns("tipo_vehiculo"), "Tipo Vehiculo",
+      ns("tipo_vehiculo"), "Tipo Veh\u00edculo",
       choices = NULL, multiple = TRUE,
       options = pickerOptions(
         actionsBox = TRUE,
