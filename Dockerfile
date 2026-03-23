@@ -18,6 +18,8 @@ COPY renv/activate.R renv/activate.R
 COPY .Rprofile .Rprofile
 # Use RSPM binaries for faster installs (no source compilation)
 ENV RENV_CONFIG_REPOS_OVERRIDE="https://packagemanager.posit.co/cran/__linux__/jammy/latest"
+# Install renv library to a shared path accessible by shinyuser
+ENV RENV_PATHS_LIBRARY=/srv/shiny-server/app/renv/library
 RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
 
 # Copy application
