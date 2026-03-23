@@ -12,18 +12,18 @@ RUN useradd -m shinyuser
 
 WORKDIR /srv/shiny-server/app
 
-# Install renv and restore packages
+# Install packages from renv.lock into system library (not project library)
+# This avoids renv activation issues at runtime with different users
 COPY renv.lock renv.lock
-COPY renv/activate.R renv/activate.R
-COPY .Rprofile .Rprofile
-# Use RSPM binaries for faster installs (no source compilation)
 ENV RENV_CONFIG_REPOS_OVERRIDE="https://packagemanager.posit.co/cran/__linux__/jammy/latest"
-# Install renv library to a shared path accessible by shinyuser
-ENV RENV_PATHS_LIBRARY=/srv/shiny-server/app/renv/library
-RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
+RUN R -e "\
+  install.packages('renv', repos = 'https://cloud.r-project.org'); \
+  renv::restore(library = .libPaths()[1], prompt = FALSE) \
+"
 
-# Copy application
+# Copy application (without .Rprofile to skip renv activation at runtime)
 COPY . .
+RUN rm -f .Rprofile
 RUN chown -R shinyuser:shinyuser /srv/shiny-server/app
 
 USER shinyuser
