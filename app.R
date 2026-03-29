@@ -11,7 +11,9 @@ ui <- page_navbar(
   theme = app_theme,
   fillable = FALSE,
   header = tags$head(
-    tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg")
+    tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
+    tags$script(async = NA, src = "https://www.googletagmanager.com/gtag/js?id=G-098V02NCB0"),
+    tags$script(HTML("window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-098V02NCB0');"))
   ),
   sidebar = sidebar(
     title = "Filtros",
