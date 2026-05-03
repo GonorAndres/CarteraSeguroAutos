@@ -227,25 +227,25 @@ scenarioServer <- function(id, filtered_data) {
     output$vb_var995 <- renderText({
       res <- sim_results()
       if (is.null(res)) return("--")
-      format_currency_mxn(res$stressed_metrics$var_995)
+      format_currency_millions(res$stressed_metrics$var_995)
     })
 
     output$vb_tvar995 <- renderText({
       res <- sim_results()
       if (is.null(res)) return("--")
-      format_currency_mxn(res$stressed_metrics$tvar_995)
+      format_currency_millions(res$stressed_metrics$tvar_995)
     })
 
     output$vb_mean <- renderText({
       res <- sim_results()
       if (is.null(res)) return("--")
-      format_currency_mxn(res$stressed_metrics$mean_loss)
+      format_currency_millions(res$stressed_metrics$mean_loss)
     })
 
     output$vb_sd <- renderText({
       res <- sim_results()
       if (is.null(res)) return("--")
-      format_currency_mxn(res$stressed_metrics$sd_loss)
+      format_currency_millions(res$stressed_metrics$sd_loss)
     })
 
     # --- Plot: Densidad de perdida agregada ---

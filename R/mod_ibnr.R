@@ -176,7 +176,8 @@ ibnrUI <- function(id) {
         value_box(title = "IBNR Total (Bornhuetter-Ferguson)", value = textOutput(ns("vb_ibnr_bf")),
                   showcase = icon("scale-balanced"), theme = "secondary"),
         value_box(title = "Diferencia CL vs BF", value = textOutput(ns("vb_diff")),
-                  showcase = icon("arrows-left-right"), theme = "warning")
+                  showcase = icon("arrows-left-right"), theme = "warning"),
+        min_height = "120px"
       ),
       card(
         card_header(
@@ -334,11 +335,11 @@ ibnrServer <- function(id, filtered_data) {
         formatCurrency(money_cols, "$", digits = 0)
     })
 
-    output$vb_ibnr_cl <- renderText(format_currency_mxn(sum(cl_result()$ibnr)))
-    output$vb_ibnr_bf <- renderText(format_currency_mxn(sum(bf_result()$bf_ibnr)))
+    output$vb_ibnr_cl <- renderText(format_currency_millions(sum(cl_result()$ibnr)))
+    output$vb_ibnr_bf <- renderText(format_currency_millions(sum(bf_result()$bf_ibnr)))
     output$vb_diff <- renderText({
       diff_val <- sum(cl_result()$ibnr) - sum(bf_result()$bf_ibnr)
-      paste0(ifelse(diff_val >= 0, "+", ""), format_currency_mxn(diff_val))
+      paste0(ifelse(diff_val >= 0, "+", ""), format_currency_millions(abs(diff_val)))
     })
 
     # --- Tab 4: Diagnostics ---

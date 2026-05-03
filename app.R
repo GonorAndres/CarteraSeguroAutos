@@ -12,6 +12,10 @@ ui <- page_navbar(
   fillable = FALSE,
   header = tags$head(
     tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
+    tags$style(HTML("
+      .bslib-value-box .value-box-value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .bslib-value-box .value-box-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    ")),
     if (nzchar(Sys.getenv("GOOGLE_ANALYTICS_ID", ""))) tagList(
       tags$script(async = NA, src = paste0("https://www.googletagmanager.com/gtag/js?id=", Sys.getenv("GOOGLE_ANALYTICS_ID"))),
       tags$script(HTML(sprintf("window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','%s');", Sys.getenv("GOOGLE_ANALYTICS_ID"))))
