@@ -183,7 +183,8 @@ ibnrUI <- function(id) {
           class = "d-flex justify-content-between align-items-center",
           "Comparativo por Año de Ocurrencia",
           sliderInput(ns("elr"), "Expected Loss Ratio (BF)",
-                      min = 0.60, max = 0.90, value = 0.75, step = 0.01)
+                      min = IBNR_CONFIG$elr_min, max = IBNR_CONFIG$elr_max,
+                      value = IBNR_CONFIG$default_elr, step = 0.01)
         ),
         DTOutput(ns("dt_comparativo"))
       )
@@ -288,7 +289,7 @@ ibnrServer <- function(id, filtered_data) {
     # --- Tab 3: IBNR Estimation ---
     bf_result <- reactive({
       cl <- cl_result()
-      elr <- input$elr %||% 0.75
+      elr <- input$elr %||% IBNR_CONFIG$default_elr
       d <- filtered_data()
       # Match premium to accident year via exposure-weighted allocation
       premium <- sapply(cl$origin, function(yr) {

@@ -19,5 +19,8 @@ subagents_outputs/
 # Playwright MCP artifacts
 .playwright-mcp/
 
+# Screenshots
+screenshots/
+
 # System
 .DS_Store

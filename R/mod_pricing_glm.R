@@ -147,7 +147,7 @@ pricingGlmUI <- function(id) {
               theme = "success"
             ),
             value_box(
-              title = "Prima Comercial (40%)",
+              title = paste0("Prima Comercial (", (PRICING_CONFIG$commercial_loading - 1) * 100, "%)"),
               value = textOutput(ns("cot_commercial")),
               showcase = icon("tags"),
               theme = "warning"
@@ -610,8 +610,15 @@ pricingGlmServer <- function(id, filtered_data) {
         error = function(e) NA_real_
       )
 
+      validate(
+        need(!is.na(pred_freq) && pred_freq > 0,
+             "Frecuencia predicha inválida. Verifique que el perfil sea compatible con los datos filtrados."),
+        need(!is.na(pred_sev) && pred_sev > 0,
+             "Severidad predicha inválida. Verifique que el perfil sea compatible con los datos filtrados.")
+      )
+
       pure_premium       <- pred_freq * pred_sev
-      commercial_premium <- pure_premium * 1.40
+      commercial_premium <- pure_premium * PRICING_CONFIG$commercial_loading
 
       # --- Waterfall decomposition (frequency side) -----------------------
       # Extract base rate and multiplicative factors from the frequency model
@@ -674,8 +681,11 @@ pricingGlmServer <- function(id, filtered_data) {
       }
 
       # Loading
-      loading_increment <- running * 0.40
-      steps[["Carga Comercial (40%)"]] <- list(multiplier = 1.40, increment = loading_increment)
+      loading_pct <- PRICING_CONFIG$commercial_loading - 1
+      loading_increment <- running * loading_pct
+      steps[[paste0("Carga Comercial (", loading_pct * 100, "%)")]] <- list(
+        multiplier = PRICING_CONFIG$commercial_loading, increment = loading_increment
+      )
 
       # Portfolio averages for comparison
       port_freq <- sum(modeling_data()$freq$n_claims) / sum(modeling_data()$freq$exposicion)
@@ -689,7 +699,7 @@ pricingGlmServer <- function(id, filtered_data) {
         commercial       = commercial_premium,
         base_rate        = base_rate,
         steps            = steps,
-        final_commercial = running * 1.40,
+        final_commercial = running * PRICING_CONFIG$commercial_loading,
         port_freq        = port_freq,
         port_sev         = port_sev,
         port_pp          = port_pp

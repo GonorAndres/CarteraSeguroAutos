@@ -44,6 +44,29 @@ KPI_TARGETS <- list(
   severidad_media = list(bueno = 24000, alerta = 30000)
 )
 
+# --- Actuarial configuration constants ---
+FRAUD_CONFIG <- list(
+  score_threshold      = 0.7,
+  mahal_weight         = 0.4,
+  rules_weight         = 0.6,
+  multiple_claims_days = 60,
+  inception_days       = 30,
+  severity_multiplier  = 3.0,
+  reporting_delay_days = 10,
+  sum_insured_ratio    = 0.90,
+  n_rules              = 5
+)
+
+PRICING_CONFIG <- list(
+  commercial_loading = 1.40
+)
+
+IBNR_CONFIG <- list(
+  default_elr = 0.75,
+  elr_min     = 0.60,
+  elr_max     = 0.90
+)
+
 #' Color semaforo para KPIs
 #' @param value valor del KPI
 #' @param bueno umbral bueno (por debajo = verde)

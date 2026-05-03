@@ -180,8 +180,10 @@ scenarioServer <- function(id, filtered_data) {
 
         # --- Metricas ---
         calc_metrics <- function(losses) {
+          losses <- losses[is.finite(losses)]
           sorted <- sort(losses)
           n <- length(sorted)
+          req(n > 0)
           var95  <- sorted[ceiling(0.95 * n)]
           var99  <- sorted[ceiling(0.99 * n)]
           var995 <- sorted[ceiling(0.995 * n)]

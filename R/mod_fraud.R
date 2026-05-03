@@ -18,7 +18,7 @@ fraudUI <- function(id) {
         theme = "primary"
       ),
       value_box(
-        title = "Flaggeados (Score > 0.7)",
+        title = paste0("Flaggeados (Score > ", FRAUD_CONFIG$score_threshold, ")"),
         value = textOutput(ns("vb_flagged")),
         showcase = icon("flag"),
         theme = "danger"
@@ -127,7 +127,7 @@ fraudServer <- function(id, filtered_data) {
         # FLAGS BASADAS EN REGLAS
         # ================================================================
 
-        # Flag 1: Multiples siniestros en la misma poliza dentro de 60 dias
+        # Flag 1: Multiples siniestros en la misma poliza dentro de window
         df <- df %>%
           group_by(poliza_id) %>%
           arrange(poliza_id, fecha_siniestro) %>%
@@ -141,7 +141,7 @@ fraudServer <- function(id, filtered_data) {
                 result <- logical(n_claims)
                 for (i in seq_len(n_claims)) {
                   diffs <- abs(as.numeric(fechas[i] - fechas[-i]))
-                  result[i] <- any(diffs <= 60)
+                  result[i] <- any(diffs <= FRAUD_CONFIG$multiple_claims_days)
                 }
                 result
               }
@@ -149,15 +149,15 @@ fraudServer <- function(id, filtered_data) {
           ) %>%
           ungroup()
 
-        # Flag 2: Siniestro dentro de 30 dias del inicio de poliza
+        # Flag 2: Siniestro dentro de inception window del inicio de poliza
         df <- df %>%
           mutate(
             flag_inception = !is.na(fecha_inicio) &
-              as.numeric(fecha_siniestro - fecha_inicio) <= 30 &
+              as.numeric(fecha_siniestro - fecha_inicio) <= FRAUD_CONFIG$inception_days &
               as.numeric(fecha_siniestro - fecha_inicio) >= 0
           )
 
-        # Flag 3: Severidad > 3x mediana por tipo de siniestro
+        # Flag 3: Severidad > multiplier x mediana por tipo de siniestro
         medianas_tipo <- df %>%
           group_by(tipo_siniestro) %>%
           summarise(mediana_tipo = median(monto_siniestro, na.rm = TRUE), .groups = "drop")
@@ -165,21 +165,21 @@ fraudServer <- function(id, filtered_data) {
         df <- df %>%
           left_join(medianas_tipo, by = "tipo_siniestro") %>%
           mutate(
-            flag_severity = monto_siniestro > 3 * mediana_tipo
+            flag_severity = monto_siniestro > FRAUD_CONFIG$severity_multiplier * mediana_tipo
           ) %>%
           select(-mediana_tipo)
 
-        # Flag 4: Retraso en reporte > 10 dias
+        # Flag 4: Retraso en reporte > threshold
         df <- df %>%
           mutate(
-            flag_delay = dias_reporte > 10
+            flag_delay = dias_reporte > FRAUD_CONFIG$reporting_delay_days
           )
 
-        # Flag 5: Monto > 90% de suma asegurada
+        # Flag 5: Monto > ratio of suma asegurada
         df <- df %>%
           mutate(
             flag_sum_insured = !is.na(suma_asegurada) & suma_asegurada > 0 &
-              monto_siniestro > 0.90 * suma_asegurada &
+              monto_siniestro > FRAUD_CONFIG$sum_insured_ratio * suma_asegurada &
               tipo_siniestro != "Robo Total"
           )
 
@@ -191,7 +191,8 @@ fraudServer <- function(id, filtered_data) {
             n_flags = as.integer(flag_multiple) + as.integer(flag_inception) +
               as.integer(flag_severity) + as.integer(flag_delay) +
               as.integer(flag_sum_insured),
-            score_fraude = 0.4 * mahal_percentile + 0.6 * (n_flags / 5)
+            score_fraude = FRAUD_CONFIG$mahal_weight * mahal_percentile +
+              FRAUD_CONFIG$rules_weight * (n_flags / FRAUD_CONFIG$n_rules)
           ) %>%
           arrange(desc(score_fraude))
 
@@ -215,13 +216,13 @@ fraudServer <- function(id, filtered_data) {
     output$vb_flagged <- renderText({
       df <- scored_data()
       if (nrow(df) == 0) return("--")
-      format_num(sum(df$score_fraude > 0.7, na.rm = TRUE))
+      format_num(sum(df$score_fraude > FRAUD_CONFIG$score_threshold, na.rm = TRUE))
     })
 
     output$vb_pct_flagged <- renderText({
       df <- scored_data()
       if (nrow(df) == 0) return("--")
-      pct <- mean(df$score_fraude > 0.7, na.rm = TRUE)
+      pct <- mean(df$score_fraude > FRAUD_CONFIG$score_threshold, na.rm = TRUE)
       format_pct(pct)
     })
 
@@ -272,7 +273,7 @@ fraudServer <- function(id, filtered_data) {
         formatStyle(
           "score_fraude",
           backgroundColor = styleInterval(
-            c(0.3, 0.5, 0.7),
+            c(0.3, 0.5, FRAUD_CONFIG$score_threshold),
             c("white", "#FFF3CD", "#FFDDAA", "#F8D7DA")
           )
         ) %>%
@@ -290,11 +291,11 @@ fraudServer <- function(id, filtered_data) {
 
       flag_counts <- tibble(
         Flag = c(
-          "M\u00faltiple (60 d\u00edas)",
-          "Inicio p\u00f3liza (30 d\u00edas)",
-          "Severidad (>3x med.)",
-          "Retraso reporte (>10d)",
-          "Suma asegurada (>90%)"
+          paste0("M\u00faltiple (", FRAUD_CONFIG$multiple_claims_days, " d\u00edas)"),
+          paste0("Inicio p\u00f3liza (", FRAUD_CONFIG$inception_days, " d\u00edas)"),
+          paste0("Severidad (>", FRAUD_CONFIG$severity_multiplier, "x med.)"),
+          paste0("Retraso reporte (>", FRAUD_CONFIG$reporting_delay_days, "d)"),
+          paste0("Suma asegurada (>", FRAUD_CONFIG$sum_insured_ratio * 100, "%)")
         ),
         Cantidad = c(
           sum(df$flag_multiple, na.rm = TRUE),
@@ -335,6 +336,7 @@ fraudServer <- function(id, filtered_data) {
       df <- scored_data()
       req(nrow(df) > 0)
 
+      thresh <- FRAUD_CONFIG$score_threshold
       plot_ly(
         x = df$score_fraude,
         type = "histogram",
@@ -344,13 +346,6 @@ fraudServer <- function(id, filtered_data) {
         ),
         nbinsx = 50
       ) %>%
-        add_trace(
-          x = c(0.7, 0.7), y = c(0, max(table(cut(df$score_fraude, 50)))),
-          type = "scatter", mode = "lines",
-          line = list(color = PALETTE$danger, width = 2, dash = "dash"),
-          name = "Umbral (0.7)",
-          showlegend = TRUE
-        ) %>%
         plotly_default_layout(
           title = "Distribuci\u00f3n del Score de Fraude",
           xlab = "Score de Fraude",
@@ -359,15 +354,15 @@ fraudServer <- function(id, filtered_data) {
         layout(
           shapes = list(
             list(
-              type = "line", x0 = 0.7, x1 = 0.7,
+              type = "line", x0 = thresh, x1 = thresh,
               y0 = 0, y1 = 1, yref = "paper",
               line = list(color = PALETTE$danger, width = 2, dash = "dash")
             )
           ),
           annotations = list(
             list(
-              x = 0.72, y = 0.95, yref = "paper",
-              text = "Umbral 0.7", showarrow = FALSE,
+              x = thresh + 0.02, y = 0.95, yref = "paper",
+              text = paste("Umbral", thresh), showarrow = FALSE,
               font = list(color = PALETTE$danger, size = 11)
             )
           ),
@@ -414,7 +409,7 @@ fraudServer <- function(id, filtered_data) {
         layout(
           shapes = list(
             list(
-              type = "line", x0 = 0.7, x1 = 0.7,
+              type = "line", x0 = FRAUD_CONFIG$score_threshold, x1 = FRAUD_CONFIG$score_threshold,
               y0 = 0, y1 = 1, yref = "paper",
               line = list(color = PALETTE$danger, width = 1.5, dash = "dash")
             )

@@ -29,6 +29,11 @@ RUN chown -R shinyuser:shinyuser /srv/shiny-server/app
 USER shinyuser
 
 ENV PORT=8080
+ENV GOOGLE_ANALYTICS_ID=G-098V02NCB0
+ENV POSTHOG_KEY=phc_DYrSznvPeJuXPHgj2Nw9BIluiGdwkbuSSih3lu6PtmH
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD R -e "tryCatch(readLines(url('http://localhost:8080/')), error = function(e) quit(status = 1))" || exit 1
 
 CMD ["R", "-e", "shiny::runApp('/srv/shiny-server/app', port=as.integer(Sys.getenv('PORT', 8080)), host='0.0.0.0')"]
