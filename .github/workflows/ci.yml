@@ -74,5 +74,4 @@ jobs:
             --memory 2Gi \
             --cpu 2 \
             --cpu-boost \
-            --timeout 600 \
-            --set-env-vars "GOOGLE_ANALYTICS_ID=${{ vars.GOOGLE_ANALYTICS_ID }},POSTHOG_KEY=${{ secrets.POSTHOG_KEY }}"
+            --timeout 600
