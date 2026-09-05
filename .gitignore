@@ -19,6 +19,9 @@ subagents_outputs/
 # Playwright MCP artifacts
 .playwright-mcp/
 
+# Cloudflare Wrangler local deployment state
+.wrangler/
+
 # Screenshots
 screenshots/
 portfolio/
